@@ -6,7 +6,10 @@ It supports IP radio connection, file uploading, creating playlists, customizing
 ## How to setup
 
 **Requirements:**  
+- Python3 (if you run without docker)
 - Docker
+- HTTPS Server (nginx/apache2/other)
+- Open ports or reverse proxy server
 
 **Steps:**  
 1. Run the setup script:  
