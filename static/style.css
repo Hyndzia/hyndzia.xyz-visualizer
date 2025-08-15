@@ -1,0 +1,337 @@
+@import url('https://fonts.googleapis.com/css2?family=UnifrakturCook:wght@700&display=swap');
+body {
+  background-color: #121212;
+  color: #ddd;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 20px;
+  text-align: center;
+  user-select: none;
+}
+
+  body::before {
+            content: "";
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+			position: fixed;
+            background-image: url('https://hyndzia.xyz/zdj.jpg');
+            background-size: cover;
+            background-position: center;
+            z-index: -3;
+            filter: brightness(0.4); 
+        }
+
+        /* Ciemna nakładka nad obrazem */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.75);
+            z-index: -2;
+        }
+
+.back-link {
+      position: fixed;
+      top: 15px;
+      left: 15px;
+      font-family: 'UnifrakturCook', cursive;
+      font-size: 1.5rem;
+      color: #A30000;
+      text-decoration: none;
+      background-color: rgba(18, 18, 18, 0);
+      padding: 8px 12px;
+      border-radius: 8px;
+      #box-shadow: 0 0 15px #A30000;
+      z-index: 1000;
+      cursor: pointer;
+      transition: background-color 0.3s ease, color 0.3s ease;
+      user-select: none;
+    }
+
+    .back-link:hover {
+      background-color: #A30000;
+      color: #121212;
+    }
+	
+h1 {
+  font-weight: 700;
+  color: #A30000;
+  margin-bottom: 15px;
+  font-family: 'UnifrakturCook', cursive;
+}
+
+/* Formularz upload */
+form#uploadForm {
+  margin-bottom: 15px;
+}
+
+form#uploadForm input[type="file"] {
+  border: 1px solid #333;
+  background-color: #222;
+  color: #eee;
+  padding: 6px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+form#uploadForm button {
+  background-color: #A30000;
+  border: none;
+  color: #111;
+  font-weight: 600;
+  padding: 8px 15px;
+  margin-left: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form#uploadForm button:hover {
+  background-color: #750000;
+}
+
+/* Wiadomość uploadu */
+#message {
+  font-weight: 600;
+  margin-top: 8px;
+  min-height: 20px;
+  color: #ffd700; /* złoty */
+}
+/* Scale down the whole player */
+
+/* Audio player */
+audio#audioPlayer {
+  width: 90%;
+  max-width: 300px;
+  margin: 15px auto 25px auto;
+  outline: none;
+  border-radius: 8px;
+  background-color: #222;
+  box-shadow: 0 0 15px #61dafb44;
+  display: block;
+}
+
+
+
+.plyr {
+	  background-color: #121212 !important;
+  color: #121212 !important;
+  border-radius: 8px;
+  box-shadow: 0 0 15px #A30000;
+  max-width: 500px;
+  margin: 20px auto;
+  --plyr-color-main: #8B0000;       /* ciemnoczerwony */
+  --plyr-control-color: #8B0000;
+  --plyr-control-color-hover: #B22222; /* jaśniejszy czerwony na hover */
+  --plyr-track-active: #8B0000;
+  --plyr-progress-buffer: #4B0000;
+  --plyr-video-current-time: #8B0000;
+  background-color: #2B0000; /* bardzo ciemne tło */
+  color: #F5F5F5; /* jasny tekst, dla kontrastu */
+}
+
+.plyr__controls {
+  background: #222 !important;
+  border-top: 1px solid #444 !important;
+  padding: 8px 10px;
+}
+
+/* Przykład nadpisania przycisków */
+.plyr__control,
+.plyr__control--pressed,
+.plyr__control:hover,
+.plyr__control:focus {
+  color: #8B0000;
+  background-color: transparent;
+  transition: color 0.3s ease;
+}
+
+.plyr__control:hover,
+.plyr__control:focus {
+  color: #B22222;
+  outline: none;
+}
+
+/* Pasek postępu */
+.plyr__progress--played {
+  background-color: #8B0000;
+}
+
+.plyr__progress--buffer {
+  background-color: #4B0000;
+}
+
+/* Tooltip */
+.plyr__tooltip {
+  background-color: #8B0000;
+  color: #fff;
+}
+
+/* Przykład zmiany slidera głośności */
+.plyr__volume--display {
+  color: #8B0000;
+}
+
+/* Pasek głośności */
+.plyr__volume--horizontal .plyr__volume-range {
+  background: #4B0000;
+}
+
+.plyr__volume--horizontal .plyr__volume-range::-webkit-slider-thumb {
+  background: #8B0000;
+}
+
+/* Jeśli chcesz też zmienić kolor ikon SVG */
+.plyr__control svg {
+  fill: #8B0000;
+}
+
+.plyr__control:hover svg {
+  fill: #B22222;
+}
+
+
+
+/* Kontrolki (checkboxy) */
+.controls {
+  margin-bottom: 10px;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.controls label {
+  margin-right: 20px;
+  cursor: pointer;
+}
+
+.controls input[type="checkbox"] {
+  margin-right: 5px;
+  cursor: pointer;
+}
+
+/* Canvas wizualizera */
+canvas#vis {
+  display: block;
+  margin: 0 auto 30px auto;
+  background-color: #000;
+  border-radius: 8px;
+  box-shadow: 0 0 20px #A30000;
+  max-width: 1100px;
+  height: 320px;
+}
+
+/* Status tekst */
+#status {
+  font-weight: 600;
+  margin-bottom: 20px;
+  color: #FF0000;
+  min-height: 20px;
+}
+
+/* Playlista */
+ul#playlist {
+  list-style: none;
+  max-width: 700px;
+  margin: 0 auto 30px auto;
+  padding: 0;
+  border-radius: 8px;
+  background-color: #222;
+  box-shadow: 0 0 20px #A30000;
+}
+
+ul#playlist li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 15px;
+  border-bottom: 1px solid #333;
+  color: #eee;
+  font-size: 1rem;
+}
+
+/* Nazwa utworu zajmuje max dostępną szerokość, ale nie przesuwa przycisków */
+.song-name {
+  flex-grow: 1;
+  flex-shrink: 1;
+  flex-basis: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 15px; /* odstęp między nazwą a przyciskami */
+}
+
+/* Kontener przycisków ma stałą szerokość, żeby przyciski się nie rozjeżdżały */
+.btn-group {
+  flex-shrink: 0;
+  display: flex;
+  gap: 8px; /* odstęp między przyciskami */
+  width: 140px; /* ustaw tak, żeby przyciski się zmieściły */
+  justify-content: flex-end;
+}
+
+/* Style przycisków bez zmian */
+ul#playlist button {
+  background-color: #61dafb;
+  border: none;
+  color: #111;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  user-select: none;
+}
+
+ul#playlist button:hover {
+  background-color: #21a1f1;
+}
+
+ul#playlist button:active {
+  transform: scale(0.95);
+}
+
+ul#playlist button.remove-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+ul#playlist button.remove-btn:hover {
+  background-color: #c1271f;
+}
+
+#playlist li {
+  transition: background-color 0.3s ease;
+}
+
+#playlist li:hover {
+  background-color: rgba(255, 255, 255, 0.3); /* brighter on hover */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6); /* subtle glow */
+  cursor: pointer;
+}
+
+#rain-canvas {
+  position: fixed; /* fixed to viewport */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1; /* behind everything */
+  pointer-events: none; /* so clicks pass through */
+}
+
+
+
+/* Responsive */
+@media (max-width: 480px) {
+  ul#playlist li {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  ul#playlist button {
+    margin: 6px 0 0 0;
+  }
+}
+
