@@ -15,4 +15,6 @@ It supports IP radio connection, file uploading, creating playlists, customizing
    sudo chmod +x build_docker.sh
    ./build_docker.sh
 
+**NOTE: If you want to change ports you need to change them in Dockerfile and in build_docker.sh accordingly**
+
 You can also configure cleanup_uploads.sh and add your own path.
