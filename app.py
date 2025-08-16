@@ -3,9 +3,13 @@ from flask import Flask, render_template, request, jsonify, session, send_file
 from datetime import timedelta
 import uuid
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = ''
+load_dotenv()
+
+app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 UPLOAD_FOLDER = 'uploads'
