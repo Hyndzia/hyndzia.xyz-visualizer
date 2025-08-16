@@ -5,11 +5,9 @@ import uuid
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
-
 app = Flask(__name__)
 load_dotenv()
-
-app.config['SECRET_KEY'] = os.getenv("SECRET_KEY")
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 UPLOAD_FOLDER = 'uploads'
@@ -55,9 +53,6 @@ def upload():
     session['playlist'] = playlist
     return jsonify({'status': 'success','message': 'Files succesfully uploaded!', 'playlist': playlist})
 
-
-
-
 @app.route('/file/<filename>')
 def get_file(filename):
     user_id = get_user_id()
@@ -101,15 +96,10 @@ def next_track():
     next_file = playlist[next_index]
     return jsonify({'file': f"/visualizer/file/{next_file}", 'playlist': playlist})
 
-
-
-
 @app.route('/playlist')
 def get_playlist():
     playlist = session.get('playlist', [])
     return jsonify({'playlist': playlist})
-
-
 
 @app.route('/remove/<filename>', methods=['POST'])
 def remove(filename):
@@ -122,7 +112,6 @@ def remove(filename):
         playlist.remove(filename)
         if os.path.exists(file_path):
             os.remove(file_path)
-    # Aktualizacja current_index, jeśli usuwany plik był wcześniej w kolejce
         current_index = session.get('current_index', 0)
         if idx < current_index:
             session['current_index'] = current_index - 1
@@ -130,8 +119,6 @@ def remove(filename):
             session['current_index'] = current_index % len(playlist) if playlist else 0
         session['playlist'] = playlist
         return jsonify({'status': 'success', 'playlist': playlist})
-
-
 
 
 @app.route('/skip/<int:index>', methods=['POST'])
@@ -143,6 +130,21 @@ def skip_to(index):
     return jsonify({'status': 'error', 'message': 'Invalid index'})
 
 
+@app.route('/clear', methods=['POST'])
+def clear_playlist():
+    playlist = session.get('playlist', [])
+    user_folder = os.path.join(app.config['UPLOAD_FOLDER'], get_user_id())
+
+    for filename in playlist:
+        file_path = os.path.join(user_folder, filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
+    session['playlist'] = []
+    session['current_index'] = 0
+
+    return jsonify({'status': 'success', 'playlist': []})
+    
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8989, debug=True)
