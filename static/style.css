@@ -566,4 +566,34 @@ ul#playlist {
   cursor: pointer;
 }
 
+.effects-container {
+    position: relative;    
+    margin: 15px 0;         
+    width: 100%;            
+    display: flex;          
+    justify-content: center; 
+}
 
+#effects-buttons {
+    position: relative;       
+    z-index: 10;              
+    display: flex;            
+    flex-wrap: wrap;          
+    gap: 10px;                
+    margin: 0;           
+}
+
+#effects-buttons button {
+    padding: 8px 15px;
+    font-size: 14px;
+    background-color: #222;
+    color: #fff;
+    border: 1px solid #555;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#effects-buttons button:hover {
+    background-color: #444;
+}

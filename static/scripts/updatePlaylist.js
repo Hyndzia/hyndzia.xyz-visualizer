@@ -62,10 +62,8 @@ async function clearPlaylist() {
         displayStatus('Playlist cleared.', 3000);
 		setTimeout(() => {
         displayStatus('Reconnecting to the radio...');
-    }, 2000);
-		setTimeout(() => {
+    }, 6000);
         playRadio();
-    }, 5000);
     } else {
         alert(data.message);
     }

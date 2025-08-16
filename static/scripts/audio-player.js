@@ -76,36 +76,6 @@ function displayStatusHTML(message, duration) {
   window.isRadioPlaying = false;
   window.isPlaylistPlaying = false;
   
-async function playRadio() {
-    const url = "https://radio.shinpu.top/radio.ogg";
-    window.audio.src = url;
-    window.audio.volume = 0.65;
-
-    if (!window.audioCtx) {
-        window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    if (window.audioCtx.state === 'suspended') {
-        await window.audioCtx.resume();
-    }
-
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
-        window.analyser = window.audioCtx.createAnalyser();
-        window.source.connect(window.analyser);
-        window.analyser.connect(window.audioCtx.destination);
-    }
-
-    try {
-        await window.audio.play();
-        window.isRadioPlaying = true;
-        window.isPlaylistPlaying = false;
-        displayStatus("Now playing: Hikineet radio!", 5000);
-    } catch (e) {
-        displayStatus("Hikineet radio is offline... Try adding a mp3 file!", 5000);
-    }
-}
-  
 	async function playRadio() {
     let url = "https://radio.shinpu.top/radio.ogg";
 	
@@ -122,32 +92,30 @@ async function playRadio() {
         await window.audioCtx.resume();
     }
     connectAudio();
-
     try {
         await window.audio.play();
         window.isRadioPlaying = true;
         window.isPlaylistPlaying = false;
         displayStatus("Now playing: Hikineet radio!", 5000);
     } catch (e) {
-        displayStatus("Hikineet radio is offline... Try adding a mp3 file!", 5000);
+        displayStatus("Reconnecting to the radio...", 5000);
     }
 }
+	let isRecon = true;
 	async function checkRadio(){
 		const url = "https://radio.shinpu.top/radio.ogg";
 		try {
 			const res = await fetch(url, {method: 'GET'});
 			if (!res.ok) throw new Error('Radio offline');
 			await playRadio();
-			//applySawModulation();
-			//applySquareModulation();
-			//applyDelay(0.17, 0.1);
-			//applyBitcrusher(16, 0.1);
-			//applyBassBoost();
-			applyPhaser();
-			applyVibratoSine();
-			//applyVibratoSquare();
+
 		} catch (e) {
-			displayStatus("Hikineet radio is offline... try adding some mp3 files!", 5000);
+			if(isRecon){
+				displayStatus("Reconnecting to the hikineet radio network...", 2000);
+			} else {
+				isRecon = false;
+				displayStatus("Hikineet radio is offline... try adding some mp3 files!", 5000);
+			}
 		}
 	}
 	checkRadio();
@@ -173,7 +141,6 @@ async function playFile(src) {
         await window.audioCtx.resume();
     }
     connectAudio();
-
     try {
         await window.audio.play();
         window.isRadioPlaying = false;
@@ -196,15 +163,12 @@ async function updateRadioTrack() {
         const data = await res.json();
 
 		const sizeInBytes = new TextEncoder().encode(JSON.stringify(data)).length;
-		console.log("Przybliżony rozmiar JSON w pamięci:", sizeInBytes, "bajtów");
 
         let mount = data.icestats.source;
         if (Array.isArray(mount)) {
             mount = mount.find(m => m.listenurl.endsWith('/radio.ogg'));
         }
-
         const title = mount && mount.title ? mount.title : "No info";
-		
 		if (!window.audio || window.audio.paused) {
             return; 
         }
@@ -215,12 +179,17 @@ async function updateRadioTrack() {
 			}
     } catch (err) {
         console.error("Failed to fetch Icecast metadata:", err);
+		if (lastTitle) {
+            displayStatusHTML(
+                'Now playing: 「 <a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a> 」 - ' + lastTitle
+            );
+		}
     }
 }
 
 updateRadioTrack();
 
-setInterval(updateRadioTrack, 10000);
+setInterval(updateRadioTrack, 5000);
 
 
 async function playNext() {
@@ -360,98 +329,21 @@ function applySawModulation() {
     oscillator.start();
 }
 
-function applyBassBoost() {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
-    }
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
-    }
-    if (window.bassApplied) return; // 
 
-    const bassFilter = window.audioCtx.createBiquadFilter();
-    bassFilter.type = "lowshelf";
-    bassFilter.frequency.value = 200; // under 200 Hz
-    bassFilter.gain.value = 7; // dB values
-
-    window.source.connect(bassFilter).connect(window.audioCtx.destination);
-    window.bassApplied = true;
-}
-
-function applyDelay(time = 0.3, feedbackGain = 0.4) {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
-    }
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
-    }
-    if (window.delayApplied) return;
+function applyDelay(time = 0.2, feedbackGain = 0.8) {
+    if (!window.audioCtx) window.audioCtx = new AudioContext();
+    if (!window.source) window.source = window.audioCtx.createMediaElementSource(window.audio);
 
     const delayNode = window.audioCtx.createDelay();
-    delayNode.delayTime.value = time; // delay time in seconds
+    delayNode.delayTime.value = time;
 
     const feedback = window.audioCtx.createGain();
-    feedback.gain.value = feedbackGain; // feedback recieved
+    feedback.gain.value = feedbackGain;
 
-    // Połączenie: input -> delay -> feedback -> delay -> output
     delayNode.connect(feedback);
     feedback.connect(delayNode);
 
-    window.source.connect(delayNode);
-    delayNode.connect(window.audioCtx.destination);
-	
-    // normal track played at the same time
-    window.source.connect(window.audioCtx.destination);
-
-    window.delayApplied = true;
-}
-
-function applyVibratoSine() {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
-    }
-
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
-    }
-
-    const vibratoGain = window.audioCtx.createGain();
-    vibratoGain.gain.value = 0.009; 
-    // Oscylator sterujący (sine)
-    const lfo = window.audioCtx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.value = 6; // Hz (prędkość vibrato)
-
-
-    lfo.connect(vibratoGain).connect(window.source.playbackRate);
-
-    window.source.connect(window.audioCtx.destination);
-    lfo.start();
-}
-
-
-function applyVibratoSquare() {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
-    }
-
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
-    }
-
- 
-    const vibratoGain = window.audioCtx.createGain();
-    vibratoGain.gain.value = 0.0093; 
-
-
-    const lfo = window.audioCtx.createOscillator();
-    lfo.type = 'square';
-    lfo.frequency.value = 6; 
-
-    lfo.connect(vibratoGain).connect(window.source.playbackRate);
-
-    window.source.connect(window.audioCtx.destination);
-    lfo.start();
+    return { delayNode, feedback };
 }
 
 
@@ -462,13 +354,12 @@ function applyPhaser() {
     if (!window.source) {
         window.source = window.audioCtx.createMediaElementSource(window.audio);
     }
-    if (window.phaserApplied) return;
 
     const filters = [];
     for (let i = 0; i < 4; i++) {
         const filter = window.audioCtx.createBiquadFilter();
         filter.type = 'allpass';
-        filter.frequency.value = 1000 * (i + 1); 
+        filter.frequency.value = 1000 * (i + 1);
         filters.push(filter);
     }
 
@@ -478,20 +369,20 @@ function applyPhaser() {
 
     const lfo = window.audioCtx.createOscillator();
     lfo.type = 'sine';
-    lfo.frequency.value = 0.5; // waving
+    lfo.frequency.value = 0.5;
 
     const lfoGain = window.audioCtx.createGain();
-    lfoGain.gain.value = 500;p
+    lfoGain.gain.value = 500;
 
     lfo.connect(lfoGain);
-    lfoGain.connect(filters[0].frequency); 
+    lfoGain.connect(filters[0].frequency);
 
     window.source.connect(filters[0]);
     filters[filters.length - 1].connect(window.audioCtx.destination);
 
     lfo.start();
-
-    window.phaserApplied = true;
+	
+    return { filters, lfo, lfoGain };
 }
 
 function applyBitcrusher(bits = 4, normFreq = 0.05) {
@@ -534,6 +425,115 @@ function applyBitcrusher(bits = 4, normFreq = 0.05) {
     window.source.connect(window.bitcrusherNode);
     window.bitcrusherNode.connect(window.analyser);
     window.analyser.connect(audioCtx.destination);
+	
+	return node;
+}
+
+let bitcrusherNode = null; 
+
+document.getElementById('bitcrusherBtn').addEventListener('click', () => {
+    if (!bitcrusherNode) {
+        bitcrusherNode = applyBitcrusher(16, 0.1);
+        displayStatus('Bitcrusher włączony', 2000);
+        document.getElementById('bitcrusherBtn').style.backgroundColor = 'green';
+    } else {
+        // Turn off effect: reconnect source directly to analyser -> destination
+        window.bitcrusherNode.disconnect();
+        window.source.disconnect();
+        window.source.connect(window.analyser);
+        window.analyser.connect(window.audioCtx.destination);
+
+        bitcrusherNode = null;
+        displayStatus('Bitcrusher wyłączony', 2000);
+        document.getElementById('bitcrusherBtn').style.backgroundColor = '';
+    }
+});
+
+let phaserNode = null;
+
+document.getElementById('phaserBtn').addEventListener('click', () => {
+    const btn = document.getElementById('phaserBtn');
+
+    if (!phaserNode) {
+        phaserNode = applyPhaser(); 
+        displayStatus('Phaser włączony', 2000);
+        btn.style.backgroundColor = 'green';
+    } else {
+        phaserNode.lfo.stop();
+        phaserNode.filters.forEach(f => f.disconnect());
+        window.source.disconnect();
+        window.source.connect(window.analyser);
+        window.analyser.connect(window.audioCtx.destination);
+
+        phaserNode = null;
+        displayStatus('Phaser wyłączony', 2000);
+        btn.style.backgroundColor = '';
+    }
+});
+
+let delayEffect = null;
+
+document.getElementById('delayBtn').addEventListener('click', () => {
+    const btn = document.getElementById('delayBtn');
+
+    if (!delayEffect) {
+        delayEffect = applyDelay();
+        window.source.disconnect();
+        window.source.connect(window.analyser);
+        window.analyser.disconnect();
+        window.analyser.connect(delayEffect.delayNode).connect(window.audioCtx.destination);
+
+        displayStatus('Delay włączony', 2000);
+        btn.style.backgroundColor = 'green';
+    } else {
+        window.analyser.disconnect();
+        window.analyser.connect(window.audioCtx.destination);
+
+        if (delayEffect.delayNode) delayEffect.delayNode.disconnect();
+        if (delayEffect.feedback) delayEffect.feedback.disconnect();
+
+        delayEffect = null;
+        displayStatus('Delay wyłączony', 2000);
+        btn.style.backgroundColor = '';
+    }
+});
+
+let bassNode = null;
+let bassGain = null;
+
+document.getElementById('bassBoostBtn').addEventListener('click', () => {
+    const btn = document.getElementById('bassBoostBtn');
+
+    if (!bassNode) {
+        bassNode = applyBassBoost();
+        if (!bassGain) {
+            bassGain = window.audioCtx.createGain();
+            bassGain.gain.value = 0.8; // normalny poziom
+        }
+        window.source.disconnect();
+		window.source.connect(window.analyser);
+        window.source.connect(bassNode).connect(bassGain).connect(window.audioCtx.destination);
+
+        displayStatus('Bass boost włączony', 2000);
+        btn.style.backgroundColor = 'green';
+    } else {
+        window.source.disconnect();
+        window.source.connect(bassGain).connect(window.audioCtx.destination);
+		window.source.connect(window.analyser);
+        bassNode.disconnect();
+        bassNode = null;
+
+        displayStatus('Bass boost wyłączony', 2000);
+        btn.style.backgroundColor = '';
+    }
+});
+
+function applyBassBoost() {
+    const bassFilter = window.audioCtx.createBiquadFilter();
+    bassFilter.type = "lowshelf";
+    bassFilter.frequency.value = 200;
+    bassFilter.gain.value = 7;
+    return bassFilter;
 }
 
 })();
