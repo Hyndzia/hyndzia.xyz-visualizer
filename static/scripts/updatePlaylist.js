@@ -29,6 +29,46 @@ function updatePlaylistUI(playlist) {
             </div>`;
         ul.appendChild(li);
     });
+	addClearButton();
+}
+
+function addClearButton() {
+    const ul = document.getElementById('playlist');
+    const existing = ul.querySelector('.clear-all-btn-container');
+    if (existing) existing.remove();
+
+    const liClear = document.createElement('li');
+    liClear.className = 'clear-all-btn-container'; 
+    liClear.innerHTML = `<button class="clear-all-btn" onclick="clearPlaylist()">Clear playlist</button>`;
+    ul.appendChild(liClear);
+}
+
+async function clearPlaylist() {
+    const res = await fetch('/visualizer/clear', { method: 'POST' });
+    const data = await res.json();
+
+    if (data.status === 'success') {
+        updatePlaylistUI([]);
+		if (!isRadioPlaying){
+			if (window.audio) {
+				window.audio.pause();
+				window.audio.currentTime = 0;
+				window.audio.src = '';
+			}
+		}else{
+			playRadio();
+		}
+        window.currentFile = null;
+        displayStatus('Playlist cleared.', 3000);
+		setTimeout(() => {
+        displayStatus('Reconnecting to the radio...');
+    }, 2000);
+		setTimeout(() => {
+        playRadio();
+    }, 5000);
+    } else {
+        alert(data.message);
+    }
 }
 
 function stopIfPlaying(filename) {
@@ -95,6 +135,11 @@ async function playNext() {
         displayStatus('No files uploaded.');
     }
 }
+
+document.getElementById('fileInput').addEventListener('change', function() {
+    const fileList = Array.from(this.files).map(file => file.name).join(', ');
+    document.getElementById('fileNames').textContent = fileList || 'Brak wybranych plików';
+});
 
 window.updatePlaylistUI = updatePlaylistUI;
 window.removeSong = removeSong;

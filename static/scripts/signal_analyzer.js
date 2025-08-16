@@ -1,22 +1,11 @@
 window.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 window.analyser = window.audioCtx.createAnalyser();
-window.analyser.fftSize = 4096;
 window.analyser.smoothingTimeConstant = 0.8;
 window.source = null;
 
 
-const ua = navigator.userAgent.toLowerCase();
-const isIntelMac = ua.includes("intel mac os x");
 
-
-if (isIntelMac) {
-    window.analyser.fftSize = 1024; 
-    var FPS = 30; 
-} else {
-    window.analyser.fftSize = 8192; 
-    var FPS = 120; 
-}
-
+const returnBtn = document.querySelector('.back-link');
 const canvas = document.getElementById('vis');
 const ctx = canvas.getContext('2d');
 const barsCheckbox = document.getElementById('bars');
@@ -25,13 +14,24 @@ const circularWaveCheckbox = document.getElementById('circularWave');
 const waveColors = ["#A30000", "#ED6807", "#F8FF2E", "#23C91A", "#07EDB3", "#07A8ED", "#A807ED", "#ED0789", "#FFFFFF", "#7D6F7C", "#2B568A", "#005C00"];
 const circularColors = ["#A30000", "#ED6807", "#F8FF2E", "#23C91A", "#07EDB3", "#07A8ED", "#A807ED", "#ED0789", "#FFFFFF", "#7D6F7C", "#2B568A", "#005C00"];
 const intelMacLatency = 30;
-const desktopLatency = 1;
+const desktopLatency = 20;
 
 
 let waveIndex = 0;
 let circularIndex = 0;
 let waveColor = waveColors[waveIndex];
 let circularColor = circularColors[circularIndex];
+
+const ua = navigator.userAgent.toLowerCase();
+const isIntelMac = ua.includes("intel mac os x");
+
+if (isIntelMac) {
+    window.analyser.fftSize = 2048; 
+    var FPS = 30; 
+} else {
+    window.analyser.fftSize = 8192; 
+    var FPS = 60; 
+}
 
 function updateColorDisplays() {
     document.getElementById("waveColorDisplay").textContent = waveColor;
@@ -52,28 +52,39 @@ document.getElementById("changeCircularColorBtn").addEventListener("click", () =
     updateColorDisplays();
 });
 
-
 updateColorDisplays();
-
-
 
 function resize(){
 canvas.width = Math.min(window.innerWidth * 0.95, 1100);
 canvas.height = 420;
 }
+
 window.addEventListener('resize', resize);
 resize();
 
+// function connectAudio() {
+// if (!window.source) {
+	// try {
+		// window.source = window.audioCtx.createMediaElementSource(window.audio);
+		// window.source.connect(window.analyser);
+		// window.analyser.connect(window.audioCtx.destination);
+	// } catch (e) {
+		// console.error("Error creating MediaElementSource:", e);
+	// }
+// }
 function connectAudio() {
-if (!window.source) {
-	try {
-		window.source = window.audioCtx.createMediaElementSource(window.audio);
-		window.source.connect(window.analyser);
-		window.analyser.connect(window.audioCtx.destination);
-	} catch (e) {
-		console.error("Error creating MediaElementSource:", e);
+	if (!window.source) {
+		try {
+			window.source = window.audioCtx.createMediaElementSource(window.audio);
+			window.gainNode = window.audioCtx.createGain();
+			window.gainNode.gain.value = 0.1;
+			window.source.connect(window.analyser);
+			window.analyser.connect(window.gainNode);
+			window.gainNode.connect(window.audioCtx.destination);
+		} catch (e) {
+			console.error("Error creating MediaElementSource:", e);
+		}
 	}
-}
 }
 function getBarColorBrightness(value, hue) {
 	const brightness = 40 + value * 60;
@@ -85,8 +96,8 @@ function getBarColorSaturation(value, hue) {
 }
 function getBarColorGradient(ctx, x, h, barHeight) {
 	const grad = ctx.createLinearGradient(x, h, x, h - barHeight);
-	grad.addColorStop(0, 'red');
-	grad.addColorStop(1, 'yellow');
+	grad.addColorStop(0, '#1D940A');
+	grad.addColorStop(1, '#05E8E4');
 	return grad;
 }
 function getBarColorPulse(value, hue) {
@@ -142,35 +153,28 @@ function draw() {
 	
 	const w = canvas.width;
 	const h = canvas.height;
-
-
+	
 	if (barsCheckbox.checked) {
 		const barCount = Math.min(128, bufferLength);
-		const barWidth = w / barCount;
+		const spacing = 2; //spacing between bars
+		const barWidth = (w - spacing * (barCount - 1)) / barCount;
 
 		for (let i = 0; i < barCount; i++) {
 			const value = freqData[i] / 255;
 			const targetHeight = value * h * 0.5;
-
-			// płynna interpolacja
+			// interpolation
 			if (targetHeight > previousHeights[i]) {
 				previousHeights[i] += (targetHeight - previousHeights[i]) * 0.2;
 			} else {
 				previousHeights[i] *= 0.9;
 			}
 
-			const x = i * barWidth;
+			//const x = i * (barWidth);
+			const x = i * (barWidth + spacing);
 			const y = h - previousHeights[i];
 			const hue = i / barCount * 360;
+
 			let color;
-			// switch(barColorMode) {
-				// case 'brightness': color = getBarColorBrightness(value, hue); break;
-				// case 'saturation': color = getBarColorSaturation(value, hue); break;
-				// case 'gradient': color = getBarColorGradient(ctx, x, h, previousHeights[i]); break;
-				// case 'pulse': color = getBarColorPulse(value, hue); break;
-				// case 'value': color = getBarColorByValue(value); break;
-				// default: color = `hsl(${hue} 80% 60%)`;
-			// }
 			switch(window.barColorMode) {
 				case 'brightness': color = getBarColorBrightness(value, hue); break;
 				case 'saturation': color = getBarColorSaturation(value, hue); break;
@@ -181,10 +185,10 @@ function draw() {
 			}
 
 			ctx.fillStyle = color;
-			ctx.fillRect(x, y, barWidth - 1, previousHeights[i]);
+			ctx.fillRect(x, y, barWidth, previousHeights[i]); // bez -1
 		}
 	}
-
+	
 	if (waveCheckbox.checked) {
 	  // waveform
 	  ctx.lineWidth = 2; //zwykle
@@ -194,7 +198,8 @@ function draw() {
 	  const step = Math.max(1, Math.floor(bufferLength / w));
 	  for(let i = 0; i < w; i++) {
 		const idx = Math.floor(i * bufferLength / w);
-		const v = (timeData[idx] - 128) / 128; // -1..1
+		const scaleWaveFactor = 1;
+		const v = (timeData[idx] - 128) / 128 * scaleWaveFactor; // -1..1
 		//ctx.lineWidth = 1 + Math.abs(v) * 4; //pulsowanie przez amplitude
 		const y = h/2 + v * (h/3);
 		if(i === 0) ctx.moveTo(i, y);
@@ -202,24 +207,25 @@ function draw() {
 	  }
 	  ctx.stroke();
 	}
-
+	
 	if (circularWaveCheckbox.checked) {
 		const centerX = w / 2;
 		const centerY = h / 2;
 		const baseRadius = 50;
 		
-		//const pulse = Math.sin(Date.now()/500);
+		const pulse = Math.sin(Date.now()/500);
 		let sum = 0;
 		for (let i = 0; i < bufferLength; i++) {
 			sum += freqData[i];
 		}
 		const avg = sum / bufferLength;
-		//const scale = 1 + pulse * 0.2; scale for pulsing (breathing)
-		const scale = 1 + (avg*(2)/255)*1.3;
+		//const scale = 3 + pulse * 0.8;// scale for pulsing (breathing)
+		const scale = 0.1 + (avg*(2)/255)*5;
 		ctx.beginPath();
 		for (let i = 0; i < w; i++) {
 			const idx = Math.floor(i * bufferLength / w);
-			const v = (timeData[idx] - 128) / 128;
+			const scaleCycleFactor = 0.5;
+			const v = (timeData[idx] - 128) / 128 * scaleCycleFactor;
 			const angle = (i / w) * Math.PI * 2;
 			//const r = 100 + v * 50;
 			const r = (baseRadius + v * 50) * scale;
@@ -230,9 +236,8 @@ function draw() {
 		}
 		ctx.strokeStyle = circularColor;
 		ctx.stroke();
-	}
+	}		
 }
-
 draw();
 
 //export
