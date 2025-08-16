@@ -2,6 +2,7 @@
 
 Web based app in **HTML/CSS + JS frontend** and **Python Flask backend**.  
 It supports IP radio connection, file uploading, creating playlists, customizing the players, audio signal modulation and more to come!
+[link text](https://hyndzia.xyz/visualizer)
 
 ## How to setup
 
