@@ -8,7 +8,6 @@ body {
   text-align: center;
   user-select: none;
 }
-
   body::before {
             content: "";
             top: 0; left: 0;
@@ -22,7 +21,6 @@ body {
             filter: brightness(0.4); 
         }
 
-        /* Ciemna nakładka nad obrazem */
         body::after {
             content: "";
             position: fixed;
@@ -55,15 +53,15 @@ body {
       background-color: #A30000;
       color: #121212;
     }
-	
+
 h1 {
   font-weight: 700;
+  font-size: 64px;
   color: #A30000;
   margin-bottom: 15px;
   font-family: 'UnifrakturCook', cursive;
 }
 
-/* Formularz upload */
 form#uploadForm {
   margin-bottom: 15px;
 }
@@ -78,34 +76,40 @@ form#uploadForm input[type="file"] {
 }
 
 form#uploadForm button {
-  background-color: #A30000;
+  background-color: rgba(18, 18, 18, 0);
   border: none;
-  color: #111;
+  color: #A30000;
+  font-family: 'UnifrakturCook', cursive;
+  font-size: 1.3rem;
   font-weight: 600;
   padding: 8px 15px;
-  margin-left: 10px;
+  margin-left: 5px;
   border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 form#uploadForm button:hover {
-  background-color: #750000;
+   background-color: #A30000;
+      color: #121212;
 }
 
-/* Wiadomość uploadu */
-#message {
-  font-weight: 600;
-  margin-top: 8px;
-  min-height: 20px;
-  color: #ffd700; /* złoty */
+#status {
+    position: fixed; 
+    top: 10px;      
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0,0,0,0.5);
+    padding: 10px;
+    color: #a30000;
+    font-size: 16px;
+    z-index: 9999;
+    border-radius: 1px;
 }
-/* Scale down the whole player */
 
-/* Audio player */
 audio#audioPlayer {
   width: 90%;
-  max-width: 300px;
+  max-width: 600px;
   margin: 15px auto 25px auto;
   outline: none;
   border-radius: 8px;
@@ -115,31 +119,39 @@ audio#audioPlayer {
 }
 
 
+.player-container {
+  display: flex;
+  flex-direction: column; 
+  align-items: center;   
+  margin-bottom: 30px;    
+  position: relative;    
+}
 
 .plyr {
-	  background-color: #121212 !important;
+  background-color: #121212 !important;
   color: #121212 !important;
   border-radius: 8px;
   box-shadow: 0 0 15px #A30000;
-  max-width: 500px;
-  margin: 20px auto;
-  --plyr-color-main: #8B0000;       /* ciemnoczerwony */
+  width: 600px;
+  max-width: 700px;
+  --plyr-color-main: #8B0000;
   --plyr-control-color: #8B0000;
-  --plyr-control-color-hover: #B22222; /* jaśniejszy czerwony na hover */
+  --plyr-control-color-hover: #B22222;
   --plyr-track-active: #8B0000;
   --plyr-progress-buffer: #4B0000;
   --plyr-video-current-time: #8B0000;
-  background-color: #2B0000; /* bardzo ciemne tło */
-  color: #F5F5F5; /* jasny tekst, dla kontrastu */
-}
 
+  position: relative;   
+  bottom: -66px;          
+  z-index: 9999;
+  margin: 0;            
+}
 .plyr__controls {
   background: #222 !important;
   border-top: 1px solid #444 !important;
   padding: 8px 10px;
 }
 
-/* Przykład nadpisania przycisków */
 .plyr__control,
 .plyr__control--pressed,
 .plyr__control:hover,
@@ -155,7 +167,6 @@ audio#audioPlayer {
   outline: none;
 }
 
-/* Pasek postępu */
 .plyr__progress--played {
   background-color: #8B0000;
 }
@@ -164,18 +175,16 @@ audio#audioPlayer {
   background-color: #4B0000;
 }
 
-/* Tooltip */
 .plyr__tooltip {
   background-color: #8B0000;
   color: #fff;
 }
 
-/* Przykład zmiany slidera głośności */
+
 .plyr__volume--display {
   color: #8B0000;
 }
 
-/* Pasek głośności */
 .plyr__volume--horizontal .plyr__volume-range {
   background: #4B0000;
 }
@@ -184,7 +193,7 @@ audio#audioPlayer {
   background: #8B0000;
 }
 
-/* Jeśli chcesz też zmienić kolor ikon SVG */
+
 .plyr__control svg {
   fill: #8B0000;
 }
@@ -193,15 +202,26 @@ audio#audioPlayer {
   fill: #B22222;
 }
 
-
-
-/* Kontrolki (checkboxy) */
-.controls {
-  margin-bottom: 10px;
-  color: #aaa;
-  font-size: 0.9rem;
+.button-with-label, .checkbox-with-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
 }
 
+.controls {
+  display: flex;
+  flex-wrap: wrap; 
+  justify-content: center;
+  gap: 20px; 
+}
+
+.button-with-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  margin: 10px;
+}
 .controls label {
   margin-right: 20px;
   cursor: pointer;
@@ -212,10 +232,9 @@ audio#audioPlayer {
   cursor: pointer;
 }
 
-/* Canvas wizualizera */
 canvas#vis {
   display: block;
-  margin: 0 auto 30px auto;
+  margin: 25px auto 30px auto;
   background-color: #000;
   border-radius: 8px;
   box-shadow: 0 0 20px #A30000;
@@ -223,21 +242,40 @@ canvas#vis {
   height: 320px;
 }
 
-/* Status tekst */
-#status {
+#message {
   font-weight: 600;
-  margin-bottom: 20px;
-  color: #FF0000;
+  margin-top: 8px;
   min-height: 20px;
+  /*color: #ffd700;*/
+  color: rgba(0, 0, 0, 0.0);
+  display: none;
 }
 
-/* Playlista */
+#status {
+    position: relative;
+	top: -60px;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.0); 
+    padding: 10px;
+    color: #a30000;
+    font-size: 16px;
+    z-index: 9999;
+    border-radius: 1px; 
+}
+
 ul#playlist {
   list-style: none;
   max-width: 700px;
-  margin: 0 auto 30px auto;
+  width: 400px;
   padding: 0;
-  border-radius: 8px;
+  margin: 10px 0 0 20px; 
+  position: relative;
+  left: 1444px;
+  top: -640px;
+  bottom: 700px;
+  border-radius: 13px;
   background-color: #222;
   box-shadow: 0 0 20px #A30000;
 }
@@ -250,9 +288,9 @@ ul#playlist li {
   border-bottom: 1px solid #333;
   color: #eee;
   font-size: 1rem;
+  border-radius: 13px;
 }
 
-/* Nazwa utworu zajmuje max dostępną szerokość, ale nie przesuwa przycisków */
 .song-name {
   flex-grow: 1;
   flex-shrink: 1;
@@ -260,19 +298,17 @@ ul#playlist li {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-right: 15px; /* odstęp między nazwą a przyciskami */
+  margin-right: 15px; 
 }
 
-/* Kontener przycisków ma stałą szerokość, żeby przyciski się nie rozjeżdżały */
 .btn-group {
   flex-shrink: 0;
   display: flex;
-  gap: 8px; /* odstęp między przyciskami */
-  width: 140px; /* ustaw tak, żeby przyciski się zmieściły */
+  gap: 8px; 
+  width: 140px; 
   justify-content: flex-end;
 }
 
-/* Style przycisków bez zmian */
 ul#playlist button {
   background-color: #61dafb;
   border: none;
@@ -283,6 +319,7 @@ ul#playlist button {
   cursor: pointer;
   transition: background-color 0.3s ease;
   user-select: none;
+  border-radius: 5px;
 }
 
 ul#playlist button:hover {
@@ -307,31 +344,127 @@ ul#playlist button.remove-btn:hover {
 }
 
 #playlist li:hover {
-  background-color: rgba(255, 255, 255, 0.3); /* brighter on hover */
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6); /* subtle glow */
+  background-color: rgba(163, 0, 0, 0.3); 
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.6); 
   cursor: pointer;
 }
 
 #rain-canvas {
-  position: fixed; /* fixed to viewport */
+  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
   height: 100vh;
-  z-index: -1; /* behind everything */
-  pointer-events: none; /* so clicks pass through */
+  z-index: -1;
+  pointer-events: none; 
 }
 
+#progress-container {
+    width: 20%;                
+    background-color: #222;    
+    border-radius: 8px;        
+    margin-top: 0x; 	
+	magrin-bottom: 20px;
+    margin-left: auto;         
+    margin-right: auto;
+    display: none;            
+    opacity: 0;                
+    transition: opacity 0.5s ease-in-out;  
+    height: 20px;            
+}
 
+#progress-bar {
+    width: 0%;                 
+    height: 100%;              
+    background-color: #8B0000; 
+    border-radius: 8px;        
+    text-align: center;        
+    color: #fff;              
+    line-height: 20px;        
+    transition: width 0.3s ease; 
+}
+ footer {
+    position: fixed;
+    bottom: 30px; 
+    right: 825px;  
+    font-size: 0.9rem;
+    color: #888;
+    background: transparent; 
+}
 
-/* Responsive */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
+  body {
+	  transform: scale(1.1);
+    font-size: 1.2rem;  
+  }
+
+  h1 {
+    font-size: 80px; 
+  }
+
+  .back-link {
+    font-size: 2rem;
+  }
+
+  .plyr {
+    width: 100%;
+    max-width: 600px;  
+  }
+
+  .controls {
+    font-size: 1rem;    
+    margin-top: 80px;  
+  }
+
+  #status {
+    font-size: 1.2rem;
+  }
+
+ul#playlist {
+    position: fixed;     
+    width: 90%;         
+    max-width: none;     
+    margin: 10px auto;   
+    top: 1231px;         
+    left: 0;
+    right: 0;          
+    z-index: 9999;        
+    padding: 0;
+}
+
   ul#playlist li {
-    flex-direction: column;
-    align-items: flex-start;
+    font-size: 1.2rem;      
+    padding: 16px 10px;    
   }
+
   ul#playlist button {
-    margin: 6px 0 0 0;
+    padding: 12px 16px;    
+    font-size: 1.2rem;      
+  }
+
+  canvas#vis {
+    height: 360px;
   }
 }
+#bars-options {
+  display: flex;
+  flex-direction: column;
+  margin-left: -220px;
+  position: absolute;
+  top: 0;             
+  left: 0;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+#bars-options label {
+  margin-bottom: 5px;
+  cursor: pointer;
+}
+
+#bars-options input[type="checkbox"] {
+  margin-right: 5px;
+  cursor: pointer;
+}
+
 
