@@ -25,4 +25,4 @@ It supports IP radio connection, file uploading, creating playlists, customizing
 You can also configure cleanup_uploads.sh and add your own path.
 
 
-![](https://hyndzia.xyz/visualize.gif)
+![demo view](https://hyndzia.xyz/visualize.gif)
