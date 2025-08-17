@@ -36,11 +36,6 @@ function checkIsApp(){
         returnBtn.style.display = 'none';
     }
 	
-	 if (!isApp) {
-        const script = document.createElement('script');
-        script.src = "https://hyndzia.xyz/scripts/rain.js";
-        document.body.appendChild(script);
-    }
 }
 
 function displayStatus(message, duration) {
@@ -50,13 +45,13 @@ function displayStatus(message, duration) {
         setTimeout(() => {
             statusElement.textContent = '';
         }, duration);
-    }
+    } else return;
 }
 
 function displayStatusHTML(message, duration) {
     const statusEl = document.getElementById('status');
     statusEl.innerHTML = message; 
-    statusEl.style.display = 'block';
+
 	
 	if (typeof duration === 'number') {
 			setTimeout(() => {
@@ -86,7 +81,7 @@ function displayStatusHTML(message, duration) {
         url = "https://radio.shinpu.top/radio";
     }
     window.audio.src = url;
-    window.audio.volume = 0.65;
+    window.audio.volume = 1;
 	
     if (window.audioCtx.state === 'suspended') {
         await window.audioCtx.resume();
@@ -173,23 +168,18 @@ async function updateRadioTrack() {
             return; 
         }
 		
-         if (title !== lastTitle) {
-			lastTitle = title;
-			displayStatusHTML('Now playing: 「 <a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a> 」 - ' + title);
-			}
+		displayStatusHTML('Now playing: 「 <a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a> 」 - ' + title, 500000);
+			
     } catch (err) {
         console.error("Failed to fetch Icecast metadata:", err);
-		if (lastTitle) {
-            displayStatusHTML(
-                'Now playing: 「 <a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a> 」 - ' + lastTitle
-            );
+		
 		}
     }
-}
+
 
 updateRadioTrack();
 
-setInterval(updateRadioTrack, 5000);
+setInterval(updateRadioTrack, 10000);
 
 
 async function playNext() {
@@ -330,7 +320,7 @@ function applySawModulation() {
 }
 
 
-function applyDelay(time = 0.2, feedbackGain = 0.8) {
+function applyDelay(time = 0.4, feedbackGain = 0.2) {
     if (!window.audioCtx) window.audioCtx = new AudioContext();
     if (!window.source) window.source = window.audioCtx.createMediaElementSource(window.audio);
 
@@ -378,7 +368,8 @@ function applyPhaser() {
     lfoGain.connect(filters[0].frequency);
 
     window.source.connect(filters[0]);
-    filters[filters.length - 1].connect(window.audioCtx.destination);
+    filters[filters.length - 1].connect(window.gainNode);
+	window.gainNode.connect(window.audioCtx.destination);
 
     lfo.start();
 	
@@ -395,7 +386,7 @@ function applyBitcrusher(bits = 4, normFreq = 0.05) {
     if (!window.source) {
         window.source = audioCtx.createMediaElementSource(window.audio);
     }
-		//delete if already exists
+
     if (window.bitcrusherNode) {
         window.bitcrusherNode.disconnect();
     }
@@ -420,32 +411,35 @@ function applyBitcrusher(bits = 4, normFreq = 0.05) {
     };
 
     window.bitcrusherNode = node;
-    // source -> bitcrusher -> analyser -> destination
     window.source.disconnect();
     window.source.connect(window.bitcrusherNode);
     window.bitcrusherNode.connect(window.analyser);
-    window.analyser.connect(audioCtx.destination);
+    window.analyser.connect(window.gainNode);
+	window.gainNode.connect(audioCtx.destination);
 	
 	return node;
 }
+
 
 let bitcrusherNode = null; 
 
 document.getElementById('bitcrusherBtn').addEventListener('click', () => {
     if (!bitcrusherNode) {
-        bitcrusherNode = applyBitcrusher(16, 0.1);
-        displayStatus('Bitcrusher włączony', 2000);
-        document.getElementById('bitcrusherBtn').style.backgroundColor = 'green';
+        bitcrusherNode = applyBitcrusher(16, 0.17);
+        displayStatus('Bitcrusher enabled', 2000);
+        document.getElementById('bitcrusherBtn').style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
+		document.getElementById('bitcrusherBtn').style.color = '#121212';
     } else {
-        // Turn off effect: reconnect source directly to analyser -> destination
         window.bitcrusherNode.disconnect();
         window.source.disconnect();
         window.source.connect(window.analyser);
-        window.analyser.connect(window.audioCtx.destination);
+        window.analyser.connect(window.gainNode);
+		window.gainNode.connect(audioCtx.destination);
 
         bitcrusherNode = null;
-        displayStatus('Bitcrusher wyłączony', 2000);
+        displayStatus('Bitcrusher disabled', 2000);
         document.getElementById('bitcrusherBtn').style.backgroundColor = '';
+		document.getElementById('bitcrusherBtn').style.color = '#a30000';
     }
 });
 
@@ -456,18 +450,21 @@ document.getElementById('phaserBtn').addEventListener('click', () => {
 
     if (!phaserNode) {
         phaserNode = applyPhaser(); 
-        displayStatus('Phaser włączony', 2000);
-        btn.style.backgroundColor = 'green';
+        displayStatus('Phaser enabled', 2000);
+        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
+		btn.style.color = '#121212';
+
     } else {
         phaserNode.lfo.stop();
         phaserNode.filters.forEach(f => f.disconnect());
         window.source.disconnect();
         window.source.connect(window.analyser);
-        window.analyser.connect(window.audioCtx.destination);
-
+        window.analyser.connect(window.gainNode);
+		window.gainNode.connect(window.audioCtx.destination);
         phaserNode = null;
-        displayStatus('Phaser wyłączony', 2000);
+        displayStatus('Phaser disabled', 2000);
         btn.style.backgroundColor = '';
+		btn.style.color = '#a30000';
     }
 });
 
@@ -481,20 +478,24 @@ document.getElementById('delayBtn').addEventListener('click', () => {
         window.source.disconnect();
         window.source.connect(window.analyser);
         window.analyser.disconnect();
-        window.analyser.connect(delayEffect.delayNode).connect(window.audioCtx.destination);
+        window.analyser.connect(delayEffect.delayNode).connect(window.gainNode);
+		window.gainNode.connect(window.audioCtx.destination);
 
-        displayStatus('Delay włączony', 2000);
-        btn.style.backgroundColor = 'green';
+        displayStatus('Delay enabled', 2000);
+        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
+		btn.style.color = '#121212';
     } else {
         window.analyser.disconnect();
-        window.analyser.connect(window.audioCtx.destination);
+        window.analyser.connect(window.gainNode);
+		window.gainNode.connect(window.audioCtx.destination);
 
         if (delayEffect.delayNode) delayEffect.delayNode.disconnect();
         if (delayEffect.feedback) delayEffect.feedback.disconnect();
 
         delayEffect = null;
-        displayStatus('Delay wyłączony', 2000);
+        displayStatus('Delay disabled', 2000);
         btn.style.backgroundColor = '';
+		btn.style.color = '#a30000'
     }
 });
 
@@ -506,25 +507,38 @@ document.getElementById('bassBoostBtn').addEventListener('click', () => {
 
     if (!bassNode) {
         bassNode = applyBassBoost();
-        if (!bassGain) {
-            bassGain = window.audioCtx.createGain();
-            bassGain.gain.value = 0.8; // normalny poziom
-        }
-        window.source.disconnect();
-		window.source.connect(window.analyser);
-        window.source.connect(bassNode).connect(bassGain).connect(window.audioCtx.destination);
 
-        displayStatus('Bass boost włączony', 2000);
-        btn.style.backgroundColor = 'green';
+        bassGain = window.audioCtx.createGain();
+        bassGain.gain.value = 1.5; // np. 1.5x podbicie
+
+        window.source.disconnect();
+
+        window.source.connect(window.analyser);
+
+        window.source.connect(bassNode);
+        bassNode.connect(bassGain);
+        bassGain.connect(window.gainNode);
+        window.gainNode.connect(window.audioCtx.destination);
+
+        displayStatus('Bass boost enabled', 2000);
+        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
+        btn.style.color = '#121212';
+
     } else {
         window.source.disconnect();
-        window.source.connect(bassGain).connect(window.audioCtx.destination);
-		window.source.connect(window.analyser);
-        bassNode.disconnect();
-        bassNode = null;
+        if (bassNode) bassNode.disconnect();
+        if (bassGain) bassGain.disconnect();
 
-        displayStatus('Bass boost wyłączony', 2000);
+        window.source.connect(window.analyser);
+        window.source.connect(window.gainNode);
+        window.gainNode.connect(window.audioCtx.destination);
+
+        bassNode = null;
+        bassGain = null;
+
+        displayStatus('Bass boost disabled', 2000);
         btn.style.backgroundColor = '';
+        btn.style.color = '#a30000';
     }
 });
 
@@ -532,7 +546,7 @@ function applyBassBoost() {
     const bassFilter = window.audioCtx.createBiquadFilter();
     bassFilter.type = "lowshelf";
     bassFilter.frequency.value = 200;
-    bassFilter.gain.value = 7;
+    bassFilter.gain.value = 5;
     return bassFilter;
 }
 
