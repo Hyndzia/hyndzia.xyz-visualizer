@@ -3,7 +3,7 @@
 A web application for **real-time audio visualization**, with a built-in player, IP radio support, and playlist management.  
 Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the frontend.
 
-[Try the demo online](https://hyndzia.xyz/visualizer){: .external }
+[Try the demo online](https://hyndzia.xyz/visualizer)
 
 ---
 
@@ -65,6 +65,7 @@ python app.py
 Configure HTTPS or reverse proxy (nginx/Apache) for production.
 
 ## Project Structure
+```
 /
 ├── app.py                   # Main Flask app
 ├── build_docker.sh          # Build & run script for Docker
@@ -73,6 +74,7 @@ Configure HTTPS or reverse proxy (nginx/Apache) for production.
 ├── Dockerfile               # Container instructions
 ├── static/                  # Frontend assets (JS, CSS, images)
 └── templates/               # HTML templates (Flask)
+```
 
 ## Helper Scripts
 * cleanup_uploads.sh – removes temporary or unused uploaded files.
