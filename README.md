@@ -51,7 +51,7 @@ chmod +x build_docker.sh
 
 # App will be available at the configured port
 ```
-Tip: To change the default port, update both the Dockerfile and build_docker.sh.
+**Tip:** To change the default port, update both the Dockerfile and build_docker.sh.
 
 ### Run manually (without Docker)
 Install dependencies:
@@ -79,6 +79,9 @@ Configure HTTPS or reverse proxy (nginx/Apache) for production.
 ## Helper Scripts
 * cleanup_uploads.sh – removes temporary or unused uploaded files.
 * build_docker.sh – builds and runs the Docker container for easy deployment.
+  
+**Tip:** Add cleanup_uploads.sh as a job to crontab for automatization.
+  
 
 ## Roadmap
  * Customizable visualizer themes (colors, shapes, animations)
