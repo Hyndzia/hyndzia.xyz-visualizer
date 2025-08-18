@@ -54,6 +54,25 @@ chmod +x build_docker.sh
 **Tip:** To change the default port, update both the Dockerfile and build_docker.sh.
 
 ### Run manually (without Docker)
+**Optional:** Create and activate venv
+```
+#Initialize
+python -m venv venv
+```
+* Linux / macOS
+```
+#Activate
+source venv/bin/activate
+```
+* Windows (Powershell)
+```
+.\venv\Scripts\Activate.ps1
+```
+* Windows (cmd.exe)
+```
+venv\Scripts\activate.bat
+```
+
 Install dependencies:
 ```
 pip install -r requirements.txt
