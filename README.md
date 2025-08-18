@@ -8,6 +8,8 @@ Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the 
 
   ![](https://hyndzia.xyz/visdemo.webp)
 
+  ![](https://hyndzia.xyz/visdemo2.webp)
+
   ![](https://hyndzia.xyz/demo.png)
 </details>
 
