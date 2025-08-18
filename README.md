@@ -104,7 +104,15 @@ Configure HTTPS or reverse proxy (nginx/Apache) for production.
 ├── requirements.txt         # Python dependencies
 ├── Dockerfile               # Container instructions
 ├── static/                  # Frontend assets (JS, CSS, images)
+│   └── scripts/             # JavaScript modules
+│       ├── audio-player.js
+│       ├── barEffectControl.js
+│       ├── rain.js
+│       ├── signal_analyzer.js
+│       ├── updatePlaylist.js
+│       └── uploadForm.js
 └── templates/               # HTML templates (Flask)
+    └── index.html
 ```
 
 ## Helper Scripts
