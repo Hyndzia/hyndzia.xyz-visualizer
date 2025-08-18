@@ -23,7 +23,9 @@ Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the 
 ## Tech Stack
 
 - **Backend** – Python + Flask  
-- **Frontend** – JavaScript, HTML, CSS (custom visualizer modules)  
+- **Frontend** – JavaScript, HTML, CSS (custom visualizer modules)
+  - [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) – used for real-time audio analysis & visualization  
+  - [Plyr](https://plyr.io/) – modern customizable media player   
 - **Containerization** – Docker  
 - **Server Integration** – nginx, Apache, or any reverse proxy with HTTPS  
 - **Helper Scripts** – `build_docker.sh`, `cleanup_uploads.sh`
