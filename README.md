@@ -1,28 +1,103 @@
-# Hyndzia.xyz-Visualizer web app
+# Hyndzia.xyz-Visualizer
 
-Web based app in **HTML/CSS + JS frontend** and **Python Flask backend**.  
-It supports IP radio connection, file uploading, creating playlists, customizing the players, audio signal modulation and more to come!
+A web application for **real-time audio visualization**, with a built-in player, IP radio support, and playlist management.  
+Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the frontend.
 
-[https://hyndzia.xyz/visualizer](https://hyndzia.xyz/visualizer)
+[Try the demo online](https://hyndzia.xyz/visualizer){: .external }
 
-## How to setup
+---
 
-**Requirements:**  
-- Python3 (if you run without docker)
-- Docker
-- HTTPS Server (nginx/apache2/other)
-- Open ports or reverse proxy server
+## Features
 
-**Steps:**  
-1. Run the setup script:  
-   ```bash
-   #If the script is not accessible, give it execution permission first:
-   sudo chmod +x build_docker.sh
-   ./build_docker.sh
+- **Audio Visualization** – responsive, dynamic visual effects generated from sound input.
+- **Built-in Audio Player** – play local audio files or online streams directly in the app.
+- **IP Radio Support** – connect to radio streams using URLs.
+- **Playlists** – create and manage song queues.
+- **Easy Setup** – quick deployment with Docker and helper scripts.
+- **Production Ready** – works with Nginx/Apache as a reverse proxy.
+- **Helper Scripts** – manage uploads and automate Docker builds.
 
-**NOTE: If you want to change ports you need to change them in Dockerfile and in build_docker.sh accordingly**
+---
 
-You can also configure cleanup_uploads.sh and add your own path.
+## Tech Stack
 
+- **Backend** – Python + Flask  
+- **Frontend** – JavaScript, HTML, CSS (custom visualizer modules)  
+- **Containerization** – Docker  
+- **Server Integration** – nginx, Apache, or any reverse proxy with HTTPS  
+- **Helper Scripts** – `build_docker.sh`, `cleanup_uploads.sh`
 
-![demo view](https://hyndzia.xyz/visualize.gif)
+---
+
+## Requirements
+
+- Python 3 (if running without Docker)  
+- Docker (recommended)  
+- HTTPS-enabled server (nginx/Apache) or reverse proxy  
+- Open port for serving the app  
+
+---
+
+## Installation & Usage
+
+### Run with Docker (recommended)
+
+```bash
+# Make script executable
+chmod +x build_docker.sh
+
+# Build and run
+./build_docker.sh
+
+# App will be available at the configured port
+```
+Tip: To change the default port, update both the Dockerfile and build_docker.sh.
+
+### Run manually (without Docker)
+Install dependencies:
+```
+pip install -r requirements.txt
+```
+Start the Flask app:
+```
+python app.py
+```
+Configure HTTPS or reverse proxy (nginx/Apache) for production.
+
+## Project Structure
+/
+├── app.py                   # Main Flask app
+├── build_docker.sh          # Build & run script for Docker
+├── cleanup_uploads.sh       # Helper script to clear uploaded files
+├── requirements.txt         # Python dependencies
+├── Dockerfile               # Container instructions
+├── static/                  # Frontend assets (JS, CSS, images)
+└── templates/               # HTML templates (Flask)
+
+## Helper Scripts
+* cleanup_uploads.sh – removes temporary or unused uploaded files.
+* build_docker.sh – builds and runs the Docker container for easy deployment.
+
+## Roadmap
+ * Customizable visualizer themes (colors, shapes, animations)
+ * Support for more audio formats and streaming protocols (M3U, HLS, etc.)
+ * User authentication and personal playlists
+ * Mobile-friendly / responsive UI improvements
+ * More playlist abilities (shuffle, change position of tracks, loop)
+ * YT-DLP support
+
+## Contributing
+### Contributions are welcome! You can help by:
+* Opening issues with bug reports or feature requests.
+
+* Submitting pull requests with:
+   * New features (visualizer effects, playlist tools, etc.)
+   * Performance improvements (frontend/backend)
+   * Documentation, tests, translations
+   * Improving deployment scripts or Docker support.
+     
+### Please keep commit messages descriptive for a clear history.
+
+## Contact
+Have questions, ideas, or feedback?
+Open an issue or reach out directly!
