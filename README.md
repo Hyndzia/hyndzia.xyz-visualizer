@@ -101,7 +101,6 @@ Configure HTTPS or reverse proxy (nginx/Apache) for production.
   
 **Tip:** Add cleanup_uploads.sh as a job to crontab for automatization.
   
-
 ## Roadmap
  * Customizable visualizer themes (colors, shapes, animations)
  * Support for more audio formats and streaming protocols (M3U, HLS, etc.)
@@ -120,8 +119,6 @@ Configure HTTPS or reverse proxy (nginx/Apache) for production.
    * Documentation, tests, translations
    * Improving deployment scripts or Docker support.
      
-### Please keep commit messages descriptive for a clear history.
-
 ## Contact
 Have questions, ideas, or feedback?
 Open an issue or reach out directly!
