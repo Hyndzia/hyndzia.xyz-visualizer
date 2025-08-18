@@ -3,7 +3,7 @@
 A web application for **real-time audio visualization**, with a built-in player, IP radio support, and playlist management.  
 Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the frontend.
 
-[Try the demo online](https://hyndzia.xyz/visualizer)
+[Try online version here!](https://hyndzia.xyz/visualizer)
 
 ---
 
