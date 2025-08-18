@@ -4,6 +4,7 @@ A web application for **real-time audio visualization**, with a built-in player,
 Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the frontend.
 
 ![](https://hyndzia.xyz/demo.png)
+![](https://hyndzia.xyz/visdemo.webp)
 [Try online version here!](https://hyndzia.xyz/visualizer)
 
 ---
