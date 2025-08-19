@@ -44,7 +44,8 @@ Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the 
 ## Requirements
 
 - Python 3 (if running without Docker)  
-- Docker (recommended)  
+- Docker (recommended)
+- [Gunicorn WSGI server](https://docs.gunicorn.org/en/stable/)
 - HTTPS-enabled server (nginx/Apache) or reverse proxy  
 - Open port for serving the app  
 
@@ -89,9 +90,9 @@ Install dependencies:
 ```
 pip install -r requirements.txt
 ```
-Start the Flask app:
+Start the gunicorn server:
 ```
-python app.py
+gunicorn -c gunicorn_config.py app:app
 ```
 Configure HTTPS or reverse proxy (nginx/Apache) for production.
 
@@ -103,6 +104,7 @@ Configure HTTPS or reverse proxy (nginx/Apache) for production.
 ├── cleanup_uploads.sh       # Helper script to clear uploaded files
 ├── requirements.txt         # Python dependencies
 ├── Dockerfile               # Container instructions
+├── gunicorn_config.py       # WSGI Server configs
 ├── static/                  # Frontend assets (JS, CSS, images)
 |   ├── style.css            # Main stylesheet
 │   └── scripts/             # JavaScript modules
