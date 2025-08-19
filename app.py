@@ -165,6 +165,7 @@ def clear_playlist():
     
 
 if __name__ == '__main__':
-    app.run(host="0.0.0.0", port=8989, debug=True)
     threading.Thread(target=monitor_uploads, daemon=True).start()
+    app.run(host="0.0.0.0", port=8989, debug=True)
+    
 
