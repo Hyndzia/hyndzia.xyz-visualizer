@@ -93,7 +93,7 @@ venv\Scripts\activate.bat
     cp .env.example .env # Linux / macOS
     copy .env.example .env # Windows
     ```
-  3. Open `.env` and **replace placeholders** with your own key:
+  2. Open `.env` and **replace placeholders** with your own key:
      
      ```
      SECRET_KEY = 'your secret key'
