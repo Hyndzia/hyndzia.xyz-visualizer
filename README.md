@@ -74,28 +74,27 @@ chmod +x build_docker.sh
 python -m venv venv
 ```
 * Linux / macOS
-```
+```bash
 #Activate
 source venv/bin/activate
 ```
 * Windows (Powershell)
-```
+```powershell
 .\venv\Scripts\Activate.ps1
 ```
 * Windows (cmd.exe)
-```
+```terminal
 venv\Scripts\activate.bat
 ```
 ## Configure environment variables:
   1. Copy the template `.env.example` to `.env`:
      
-    ```
     cp .env.example .env # Linux / macOS
     copy .env.example .env # Windows
-    ```
-  2. Open `.env` and **replace placeholders** with your own key:
+
+  3. Open `.env` and **replace placeholders** with your own key:
      
-     ```
+     ```bash
      SECRET_KEY = 'your secret key'
      ```
      
