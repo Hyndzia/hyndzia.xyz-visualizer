@@ -88,14 +88,17 @@ venv\Scripts\activate.bat
 ```
 ## Configure environment variables:
   1. Copy the template `.env.example` to `.env`:
+     
     ```
     cp .env.example .env # Linux / macOS
     copy .env.example .env # Windows
     ```
-  2. Open `.env` and **replace placeholders** with your own key:
+  3. Open `.env` and **replace placeholders** with your own key:
+     
      ```
      SECRET_KEY = 'your secret key'
      ```
+     
 Install dependencies:
 ```
 pip install -r requirements.txt
