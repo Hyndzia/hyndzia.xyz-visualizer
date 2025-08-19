@@ -93,7 +93,11 @@ pip install -r requirements.txt
 ```
 Start the gunicorn server:
 ```
+#with optional venv
 venv/bin/gunicorn -c gunicorn_config.py app:app
+
+#without optional venv (not recommended)
+gunicorn -c gunicorn_config.py app:app
 ```
 Configure HTTPS or reverse proxy (nginx/Apache) for production.
 
