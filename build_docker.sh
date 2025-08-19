@@ -1,9 +1,7 @@
 #!/bin/bash
 
 # Build the Docker image
-sudo docker build -t visualizer visualizer
+ sudo docker build -t visual .
 
 # Run the Docker container mapping your specific port
-sudo docker run -p 8989:8989 visualizer
-
-
+sudo docker run -p 8989:8989 visual 

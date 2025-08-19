@@ -4,6 +4,8 @@ from datetime import timedelta
 import uuid
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+import threading
+import time
 
 app = Flask(__name__)
 load_dotenv()
@@ -24,6 +26,22 @@ def get_user_id():
         session['playlist'] = []
         session['current_index'] = 0
     return session['user_id']
+    
+def folder_size(path):
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            if os.path.exists(fp):
+                total += os.path.getsize(fp)
+    return total
+
+def monitor_uploads():
+    while True:
+        size_bytes = folder_size(UPLOAD_FOLDER)
+        size_mb = size_bytes / (1024 * 1024)
+        print(f"[Uploads Folder Size] {size_mb:.2f} MB")
+        time.sleep(1800)  # seconds
 
 @app.route('/')
 def index():
@@ -148,4 +166,5 @@ def clear_playlist():
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=8989, debug=True)
+    threading.Thread(target=monitor_uploads, daemon=True).start()
 
