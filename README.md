@@ -31,12 +31,14 @@ Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the 
 
 ## Tech Stack
 
-- **Backend** – Python + Flask  
+- **Backend** – Python3
+    - [Flask](https://flask.palletsprojects.com/en/stable/)
+    - [Gunicorn WSGI server](https://docs.gunicorn.org/en/stable/)
 - **Frontend** – JavaScript, HTML, CSS (custom visualizer modules)
   - [Web Audio API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Audio_API) – used for real-time audio analysis & visualization  
   - [Plyr](https://plyr.io/) – modern customizable media player   
 - **Containerization** – Docker  
-- **Server Integration** – nginx, Apache, or any reverse proxy with HTTPS  
+- **Server Integration** – nginx, Apache2, or any reverse proxy with HTTPS
 - **Helper Scripts** – `build_docker.sh`, `cleanup_uploads.sh`
 
 ---
@@ -45,7 +47,6 @@ Built with **Python (Flask)** on the backend and **JavaScript/HTML/CSS** on the 
 
 - Python 3 (if running without Docker)  
 - Docker (recommended)
-- [Gunicorn WSGI server](https://docs.gunicorn.org/en/stable/)
 - HTTPS-enabled server (nginx/Apache) or reverse proxy  
 - Open port for serving the app  
 
@@ -92,7 +93,7 @@ pip install -r requirements.txt
 ```
 Start the gunicorn server:
 ```
-gunicorn -c gunicorn_config.py app:app
+venv/bin/gunicorn -c gunicorn_config.py app:app
 ```
 Configure HTTPS or reverse proxy (nginx/Apache) for production.
 
