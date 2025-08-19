@@ -1,19 +1,18 @@
- 
-// function updateEffectDisplay() {
-//     const display = document.getElementById('currentEffect');
-//     if (display) display.textContent = window.barColorMode;
+ // function updateEffectDisplay() {
+    // const display = document.getElementById('currentEffect');
+    // if (display) display.textContent = window.barColorMode;
 // }
 
 // updateEffectDisplay();
 
-// const btn = document.getElementById('changeEffectBtn');
-// if (btn) {
-//     btn.addEventListener('click', () => {
-//         // Pick a random new effect
-//         window.barColorMode = barEffects[Math.floor(Math.random() * barEffects.length)];
-//         updateEffectDisplay();
-//         console.log('New bars effect:', window.barColorMode);
-//         // The next draw() cycle in signal_analyzer.js will use this new mode
-//     });
+// const btn1 = document.getElementById('changeEffectBtn');
+// let effectIndex = 0;
+// if (btn1) {
+    // btn1.addEventListener('click', () => {
+        // effectIndex = (effectIndex + 1) % barEffects.length;
+        // window.barColorMode = barEffects[effectIndex];
+        // updateEffectDisplay(); 
+        // console.log('New bars effect:', window.barColorMode);
+    // });
 // }
 

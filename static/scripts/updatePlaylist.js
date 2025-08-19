@@ -1,14 +1,3 @@
-function displayStatusHTML(message, duration) {
-    const statusEl = document.getElementById('status');
-    statusEl.innerHTML = message; 
-    statusEl.style.display = 'block';
-
-    if (duration) {
-        setTimeout(() => {
-            statusEl.style.display = 'none';
-        }, duration);
-    }
-}
 
 function updatePlaylistUI(playlist) {
     const ul = document.getElementById('playlist');

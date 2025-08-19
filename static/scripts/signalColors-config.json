@@ -1,0 +1,18 @@
+{
+  "waveColors": ["#A30000", "#ED6807", "#F8FF2E", "#23C91A", "#07EDB3", "#07A8ED", "#A807ED", "#ED0789", "#FFFFFF", "#7D6F7C", "#2B568A", "#005C00"],
+  "circularColors": ["#A30000", "#ED6807", "#F8FF2E", "#23C91A", "#07EDB3", "#07A8ED", "#A807ED", "#ED0789", "#FFFFFF", "#7D6F7C", "#2B568A", "#005C00"],
+  "barEffects": ["brightness", "saturation", "gradient", "pulse", "value", "neon", "color wave", "vertical wave"],
+  "spectrumLineColors": [
+    "rgba(0, 200, 255, 0.7)",
+    "rgba(255, 100, 150, 0.7)",
+    "rgba(0, 255, 100, 0.7)",
+    "rgba(255, 255, 0, 0.7)"
+  ],
+  "spectrumGradients": [
+    ["rgba(0,200,255,0.7)", "rgba(255,100,150,0.7)", "rgba(0,255,100,0.7)"],
+    ["rgba(255,0,0,0.7)", "rgba(255,255,0,0.7)", "rgba(255,0,255,0.7)"],
+    ["rgba(0,0,255,0.7)", "rgba(0,255,255,0.7)", "rgba(255,255,255,0.7)"]
+  ]
+  
+}
+

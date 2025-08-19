@@ -3,11 +3,11 @@ document.addEventListener('DOMContentLoaded', () => {
     controls: [
         'play', 
         'progress',    
-        //'current-time',
+        'current-time',
         'duration',    
         'volume',      
         'mute',        
-        'settings',    
+        'settings',   
         'fullscreen'   
     ],
     autoplay: false,

@@ -18,7 +18,7 @@ let spectrumGradients = [];
 let barEffects = [];
 
 const intelMacLatency = 30;
-const desktopLatency = 15;
+const desktopLatency = 20;
 
 let waveIndex = 0;
 let circularIndex = 0;
