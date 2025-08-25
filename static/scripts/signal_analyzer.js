@@ -162,13 +162,16 @@ function getBarColorByValue(value) {
 	else return '#f00';
 }
 function getBarColorNeon(ctx, x, h, barHeight) {
+	ctx.save();
     const grad = ctx.createLinearGradient(x, h, x, h - barHeight);
     grad.addColorStop(0, 'rgba(0,255,255,0.9)');
     grad.addColorStop(1, 'rgba(0,255,255,0.3)');
     ctx.shadowColor = 'rgba(0,255,255,0.5)';
     ctx.shadowBlur = 15;
+	ctx.restore();
     return grad;
 }
+
 function getBarColorWave(value, hue) {
     const lightness = 50 + 10 * Math.sin(Date.now() / 100 + value * 5);
     return `hsl(${hue} 80% ${lightness}%)`;
