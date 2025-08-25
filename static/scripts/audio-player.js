@@ -40,6 +40,7 @@ function checkIsApp(){
 
 function displayStatus(message, duration) {
     const statusElement = document.getElementById('status');
+	statusElement.style.display = '';
     statusElement.textContent = message;
 	    if (typeof duration === 'number') {
         setTimeout(() => {
@@ -50,9 +51,9 @@ function displayStatus(message, duration) {
 
 function displayStatusHTML(message, duration) {
     const statusEl = document.getElementById('status');
+	statusEl.style.display = '';
     statusEl.innerHTML = message; 
 
-	
 	if (typeof duration === 'number') {
 			setTimeout(() => {
             statusEl.style.display = 'none';
@@ -168,7 +169,12 @@ async function updateRadioTrack() {
             return; 
         }
 		
-		displayStatusHTML('Now playing: 「 <a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a> 」 - ' + title, 500000);
+		const artist = mount && mount.artist ? mount.artist : "No info";
+		if (!window.audio || window.audio.paused) {
+            return; 
+        }
+		
+		displayStatusHTML('Now playing: <a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a> 「' + artist + ' - ' + title + '」 ');
 			
     } catch (err) {
         console.error("Failed to fetch Icecast metadata:", err);
@@ -243,11 +249,11 @@ audio.addEventListener('ended', async () => {
         window.audio.load();    
         displayStatus('Playlist finished.', 5000);
 		setTimeout(() => {
-        displayStatus('Reconnecting to the radio...');
-    }, 2000);
+        displayStatus('Reconnecting to the radio...', 3000);
+    }, 5500);
 		setTimeout(() => {
         playRadio();
-    }, 5000);
+    }, 5800);
     }
 
     if (previousFile) {
@@ -420,26 +426,38 @@ function applyBitcrusher(bits = 4, normFreq = 0.05) {
 	return node;
 }
 
+function checkResumeStatus(flag, currentFile){
+	if (flag && currentFile) {
+            setTimeout(() => {
+                displayStatus('Now playing: ' + currentFile.split('/').pop());
+            }, 2100);
+        } else return;
+}
 
 let bitcrusherNode = null; 
 
 document.getElementById('bitcrusherBtn').addEventListener('click', () => {
+    const btn = document.getElementById('bitcrusherBtn');
     if (!bitcrusherNode) {
         bitcrusherNode = applyBitcrusher(16, 0.17);
         displayStatus('Bitcrusher enabled', 2000);
-        document.getElementById('bitcrusherBtn').style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
-		document.getElementById('bitcrusherBtn').style.color = '#121212';
+        checkResumeStatus(isPlaylistPlaying, window.currentFile);
+        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
+        btn.style.color = '#121212';
     } else {
         window.bitcrusherNode.disconnect();
         window.source.disconnect();
         window.source.connect(window.analyser);
         window.analyser.connect(window.gainNode);
-		window.gainNode.connect(audioCtx.destination);
+        window.gainNode.connect(audioCtx.destination);
 
         bitcrusherNode = null;
         displayStatus('Bitcrusher disabled', 2000);
-        document.getElementById('bitcrusherBtn').style.backgroundColor = '';
-		document.getElementById('bitcrusherBtn').style.color = '#a30000';
+
+        checkResumeStatus(isPlaylistPlaying, window.currentFile);
+
+        btn.style.backgroundColor = '';
+        btn.style.color = '#a30000';
     }
 });
 
@@ -451,6 +469,7 @@ document.getElementById('phaserBtn').addEventListener('click', () => {
     if (!phaserNode) {
         phaserNode = applyPhaser(); 
         displayStatus('Phaser enabled', 2000);
+		checkResumeStatus(isPlaylistPlaying, window.currentFile);
         btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
 		btn.style.color = '#121212';
 
@@ -463,6 +482,7 @@ document.getElementById('phaserBtn').addEventListener('click', () => {
 		window.gainNode.connect(window.audioCtx.destination);
         phaserNode = null;
         displayStatus('Phaser disabled', 2000);
+		checkResumeStatus(isPlaylistPlaying, window.currentFile);
         btn.style.backgroundColor = '';
 		btn.style.color = '#a30000';
     }
@@ -482,6 +502,7 @@ document.getElementById('delayBtn').addEventListener('click', () => {
 		window.gainNode.connect(window.audioCtx.destination);
 
         displayStatus('Delay enabled', 2000);
+		checkResumeStatus(isPlaylistPlaying, window.currentFile);
         btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
 		btn.style.color = '#121212';
     } else {
@@ -494,6 +515,7 @@ document.getElementById('delayBtn').addEventListener('click', () => {
 
         delayEffect = null;
         displayStatus('Delay disabled', 2000);
+		checkResumeStatus(isPlaylistPlaying, window.currentFile);
         btn.style.backgroundColor = '';
 		btn.style.color = '#a30000'
     }
@@ -521,6 +543,7 @@ document.getElementById('bassBoostBtn').addEventListener('click', () => {
         window.gainNode.connect(window.audioCtx.destination);
 
         displayStatus('Bass boost enabled', 2000);
+		checkResumeStatus(isPlaylistPlaying, window.currentFile);
         btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
         btn.style.color = '#121212';
 
@@ -537,6 +560,7 @@ document.getElementById('bassBoostBtn').addEventListener('click', () => {
         bassGain = null;
 
         displayStatus('Bass boost disabled', 2000);
+		checkResumeStatus(isPlaylistPlaying, window.currentFile);
         btn.style.backgroundColor = '';
         btn.style.color = '#a30000';
     }
