@@ -174,7 +174,7 @@ async function updateRadioTrack() {
             return; 
         }
 		
-		displayStatusHTML('Now playing: <a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a> 「' + artist + ' - ' + title + '」 ');
+		displayStatusHTML('Now playing: 「 ' + artist + ' - ' + title + ' 」  <a href="https://radio.shinpu.top" target="_blank"><br>radio.shinpu.top</a>');
 			
     } catch (err) {
         console.error("Failed to fetch Icecast metadata:", err);

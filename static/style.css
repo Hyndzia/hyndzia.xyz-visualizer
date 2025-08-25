@@ -365,7 +365,7 @@ canvas#vis {
 
 #status {
     position: relative;
-	top: -60px;
+	top: -85px;
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
@@ -624,7 +624,7 @@ footer {
     left: 50%;                 
     transform: translateX(-50%);
     width: 90%;                
-    max-width: 400px;          
+    max-width: 400px;         
     margin: 0;
     padding: 0;
     z-index: 9999;
