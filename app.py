@@ -14,7 +14,7 @@ app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-ALLOWED_EXTENSIONS = {'mp3'}
+ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4u', 'ogg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def allowed_file(filename):
