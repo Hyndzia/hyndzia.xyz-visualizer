@@ -3,6 +3,7 @@
 CONTAINER_NAME="visual_container"
 IMAGE_NAME="visual"
 PORT="8989:8989"
+COOKIE_FILE_PATH="$(pwd)/cookies.txt" 
 
 echo "Building Docker image '${IMAGE_NAME}'..."
 sudo docker build -t ${IMAGE_NAME} .
@@ -13,5 +14,9 @@ if [ "$(sudo docker ps -aq -f name=^${CONTAINER_NAME}$)" ]; then
 fi
 
 echo "Running container '${CONTAINER_NAME}'..."
-sudo docker run -d -p ${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}
-
+sudo docker run -d \
+  -p ${PORT} \
+  --name ${CONTAINER_NAME} \
+  -v "${COOKIE_FILE_PATH}:/app/cookies.txt" \
+  -e COOKIE_FILE=/app/cookies.txt \
+  ${IMAGE_NAME}

@@ -12,6 +12,13 @@
 	<div class="wrapper">
 	<a class="back-link" href="https://hyndzia.xyz" title="Return to previous page">&larr; Return</a>
   <h1>Visualizer</h1>
+  
+  <div id="yt-search-container">
+  <input type="text" id="yt-query" placeholder="Search YouTube or paste URL" />
+  <button id="yt-search-btn">Add</button>
+  <div id="yt-status"></div>
+</div>
+
 
  <form id="uploadForm" enctype="multipart/form-data">
     <input type="file" id="fileInput" name="mp3_files" accept=".mp3, .wav, .ogg, .m4u" multiple style="display:none;">
@@ -78,7 +85,7 @@
   </div>
 
  <footer>© 2025 hyndzia.xyz. All rights reserved.<br>
-		v0.3.8 [2025-08-25]</footer>
+		v0.4.0 [2025-09-25]</footer>
 
 <ul id="playlist">
   {% for song in playlist %}

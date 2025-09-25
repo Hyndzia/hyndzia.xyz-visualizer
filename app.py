@@ -6,6 +6,7 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import threading
 import time
+import yt_dlp
 
 app = Flask(__name__)
 load_dotenv()
@@ -70,6 +71,45 @@ def upload():
 
     session['playlist'] = playlist
     return jsonify({'status': 'success','message': 'Files succesfully uploaded!', 'playlist': playlist})
+
+@app.route('/youtube', methods=['POST'])
+def youtube_search():
+    user_id = get_user_id()
+    user_folder = os.path.join(app.config['UPLOAD_FOLDER'], user_id)
+    os.makedirs(user_folder, exist_ok=True)
+
+    data = request.get_json()
+    query = data.get("query", "").strip()
+    if not query:
+        return jsonify({'status': 'error', 'message': 'No query provided'})
+
+    ydl_opts = {
+        'format': 'bestaudio/best',
+        'outtmpl': os.path.join(user_folder, '%(title)s.%(ext)s'),
+        'noplaylist': True,
+        'quiet': True,
+        'cookiefile': os.getenv("COOKIE_FILE", "/app/cookies.txt"),
+    }
+    
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:   # <-- use yt_dlp.YoutubeDL
+            info = ydl.extract_info(query, download=True)
+            filename = ydl.prepare_filename(info)
+            safe_name = os.path.basename(filename)
+
+            playlist = session.get('playlist', [])
+            if safe_name not in playlist:
+                playlist.append(safe_name)
+            session['playlist'] = playlist
+
+        return jsonify({
+            'status': 'success',
+            'message': f"Added {info.get('title')} to playlist",
+            'playlist': playlist
+        })
+
+    except Exception as e:
+        return jsonify({'status': 'error', 'message': str(e)})
 
 @app.route('/file/<filename>')
 def get_file(filename):
@@ -166,6 +206,6 @@ def clear_playlist():
 
 if __name__ == '__main__':
     threading.Thread(target=monitor_uploads, daemon=True).start()
-    app.run(host="0.0.0.0", port=8989, debug=True)
+    app.run(host="127.0.0.1", port=8989, debug=True)
     
 
