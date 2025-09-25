@@ -92,7 +92,7 @@ def youtube_search():
     }
     
     try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:   # <-- use yt_dlp.YoutubeDL
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(query, download=True)
             filename = ydl.prepare_filename(info)
             safe_name = os.path.basename(filename)
@@ -145,10 +145,9 @@ def next_track():
     if not playlist:
         return jsonify({'file': None, 'playlist': []})
 
-    # następny indeks
     next_index = current_index + 1
     if next_index >= len(playlist):
-        next_index = 0  # lub None, jeśli chcesz kończyć
+        next_index = 0 
 
     session['current_index'] = next_index
     next_file = playlist[next_index]

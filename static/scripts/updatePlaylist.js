@@ -148,7 +148,7 @@ document.getElementById('yt-search-btn').addEventListener('click', async () => {
     const query = document.getElementById('yt-query').value.trim();
     if (!query) return;
 
-	showYtStatus("Adding song to queue...", 9000);
+	showYtStatus("Adding song to queue...", 30000);
 
     const res = await fetch('/visualizer/youtube', {
         method: 'POST',
@@ -165,7 +165,8 @@ document.getElementById('yt-search-btn').addEventListener('click', async () => {
         // const lastIndex = data.playlist.length - 1;
         // skipTo(lastIndex);
     } else {
-        showYtStatus("Error: " + data.message, 9000);
+        //showYtStatus("Error: " + data.message, 9000); //debug
+		showYtStatus("Service currently unavailable", 9000);
     }
 });
 
