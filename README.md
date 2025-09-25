@@ -147,7 +147,7 @@ Configure HTTPS or reverse proxy (nginx/Apache) for production.
  * User authentication and personal playlists
  * Mobile-friendly / responsive UI improvements
  * More playlist abilities (shuffle, change position of tracks, loop)
- * YT-DLP support
+ * YT-DLP support ✓ [find another alternative in the near future]
 
 ## Contributing
 ### Contributions are welcome! You can help by:
