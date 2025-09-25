@@ -128,6 +128,48 @@ document.getElementById('fileInput').addEventListener('change', function() {
     document.getElementById('fileNames').textContent = fileList || 'Brak wybranych plików';
 });
 
+function showYtStatus(message, duration) {
+    const statusEl = document.getElementById('yt-status');
+    statusEl.innerText = message;
+    statusEl.style.opacity = "1"; 
+
+    if (statusEl._timeoutId) {
+        clearTimeout(statusEl._timeoutId);
+    }
+
+    statusEl._timeoutId = setTimeout(() => {
+        statusEl.style.transition = "opacity 0.5s ease";
+        statusEl.style.opacity = "0";
+        setTimeout(() => statusEl.innerText = "", 500);
+    }, duration);
+}
+
+document.getElementById('yt-search-btn').addEventListener('click', async () => {
+    const query = document.getElementById('yt-query').value.trim();
+    if (!query) return;
+
+	showYtStatus("Adding song to queue...", 9000);
+
+    const res = await fetch('/visualizer/youtube', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({query})
+    });
+
+    const data = await res.json();
+    if (data.status === 'success') {
+        showYtStatus(data.message, 5000);
+        updatePlaylistUI(data.playlist);
+
+        // auto-play next track
+        // const lastIndex = data.playlist.length - 1;
+        // skipTo(lastIndex);
+    } else {
+        showYtStatus("Error: " + data.message, 9000);
+    }
+});
+
+
 window.updatePlaylistUI = updatePlaylistUI;
 window.removeSong = removeSong;
 window.skipTo = skipTo;
