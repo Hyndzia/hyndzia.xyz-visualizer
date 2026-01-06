@@ -77,11 +77,15 @@ def youtube_search():
     user_id = get_user_id()
     user_folder = os.path.join(app.config['UPLOAD_FOLDER'], user_id)
     os.makedirs(user_folder, exist_ok=True)
-
     data = request.get_json()
     query = data.get("query", "").strip()
     if not query:
         return jsonify({'status': 'error', 'message': 'No query provided'})
+
+    if not query.startswith("http"):
+        search_url = f"ytsearch1:{query}"  
+    else:
+        search_url = query  
 
     ydl_opts = {
         'format': 'bestaudio/best',
@@ -90,10 +94,13 @@ def youtube_search():
         'quiet': True,
         'cookiefile': os.getenv("COOKIE_FILE", "/app/cookies.txt"),
     }
-    
+
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=True)
+            info = ydl.extract_info(search_url, download=True)
+            if 'entries' in info:
+                info = info['entries'][0]
+
             filename = ydl.prepare_filename(info)
             safe_name = os.path.basename(filename)
 
@@ -110,6 +117,7 @@ def youtube_search():
 
     except Exception as e:
         return jsonify({'status': 'error', 'message': str(e)})
+
 
 @app.route('/file/<filename>')
 def get_file(filename):

@@ -9,15 +9,17 @@
 
 </head>
 <body>
+	<button id="optionsBtn" class="options-btn" title="Radio options">⚙️</button>
 	<div class="wrapper">
+
 	<a class="back-link" href="https://hyndzia.xyz" title="Return to previous page">&larr; Return</a>
   <h1>Visualizer</h1>
   
-  <div id="yt-search-container">
-  <input type="text" id="yt-query" placeholder="Search YouTube or paste URL" />
-  <button id="yt-search-btn">Add</button>
-  <div id="yt-status"></div>
-</div>
+  <!-- <div id="yt-search-container"> -->
+    <!-- <input type="text" id="yt-query" placeholder="Search song name or paste URL" /> -->
+    <!-- <button id="yt-search-btn">Add</button> -->
+    <!-- <div id="yt-status"></div> -->
+  <!-- </div> -->
 
 
  <form id="uploadForm" enctype="multipart/form-data">
@@ -84,8 +86,8 @@
  		 <div id="status"></div>
   </div>
 
- <footer>© 2025 hyndzia.xyz. All rights reserved.<br>
-		v0.4.0 [2025-09-25]</footer>
+ <footer>© 2026 hyndzia.xyz. All rights reserved.<br>
+		v0.4.1 [2026-01-07]</footer>
 
 <ul id="playlist">
   {% for song in playlist %}
@@ -98,6 +100,24 @@
     </li>
   {% endfor %}
 </ul>
+</div>
+<div id="optionsOverlay" class="overlay hidden">
+  <div class="modal">
+    <h2>Radio settings</h2>
+
+    <label for="radioUrl">Radio stream URL</label>
+    <input
+      id="radioUrl"
+      type="text"
+      placeholder="https://radio.shinpu.top/radio.ogg"
+      autocomplete="off"
+    >
+
+    <div class="modal-buttons">
+      <button id="saveRadio" class="color-btn">Play</button>
+      <button id="closeModal" class="color-btn">Cancel</button>
+    </div>
+  </div>
 </div>
 <script src="https://hyndzia.xyz/scripts/audio-player.js"></script>
 <script src="https://hyndzia.xyz/scripts/signal_analyzer.js"></script>
