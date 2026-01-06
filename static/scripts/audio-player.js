@@ -71,30 +71,34 @@ function displayStatusHTML(message, duration) {
   const circularWaveCheckbox = document.getElementById('circularWave');
   window.isRadioPlaying = false;
   window.isPlaylistPlaying = false;
+  document.addEventListener('DOMContentLoaded', initRadioOptionsUI);
   
-	async function playRadio() {
-    let url = "https://radio.shinpu.top/radio.ogg";
-	
-	const ua = navigator.userAgent.toLowerCase(); 
-	const isIntelMac = ua.includes("intel mac os x");
+	async function playRadio(force = false) {
+    const url = localStorage.getItem('customRadioUrl') || "https://radio.shinpu.top/radio.ogg";
 
-    if (isIntelMac) {
-        url = "https://radio.shinpu.top/radio";
-    }
-    window.audio.src = url;
+    if (!force && window.isRadioPlaying) return;
+
+    // Fix .ogg URL for Intel Mac if needed
+    const ua = navigator.userAgent.toLowerCase();
+    const finalUrl = ua.includes("intel mac os x") && url.endsWith(".ogg") ? url.replace(".ogg", "") : url;
+
+    window.audio.src = finalUrl;
     window.audio.volume = 1;
-	
-    if (window.audioCtx.state === 'suspended') {
+
+    if (window.audioCtx?.state === 'suspended') {
         await window.audioCtx.resume();
     }
+
     connectAudio();
+
     try {
         await window.audio.play();
         window.isRadioPlaying = true;
         window.isPlaylistPlaying = false;
-        displayStatus("Now playing: Hikineet radio!", 5000);
+        displayStatus("Now playing radio!", 4000);
+        updateRadioTrack(); // update the text preview immediately
     } catch (e) {
-        displayStatus("Reconnecting to the radio...", 5000);
+        displayStatus("Unable to start radio...", 4000);
     }
 }
 	let isRecon = true;
@@ -151,40 +155,30 @@ let lastTitle = "";
 let flag = 0;
 
 async function updateRadioTrack() {
-	if (!window.isRadioPlaying) {
-		return; 
-	}
+    if (!window.isRadioPlaying) return;
+
     try {
         const res = await fetch('https://radio.shinpu.top/status-json.xsl');
         const data = await res.json();
-
-		const sizeInBytes = new TextEncoder().encode(JSON.stringify(data)).length;
 
         let mount = data.icestats.source;
         if (Array.isArray(mount)) {
             mount = mount.find(m => m.listenurl.endsWith('/radio.ogg'));
         }
-        const title = mount && mount.title ? mount.title : "No info";
-		if (!window.audio || window.audio.paused) {
-            return; 
-        }
-		
-		const artist = mount && mount.artist ? mount.artist : "No info";
-		if (!window.audio || window.audio.paused) {
-            return; 
-        }
-		
-		displayStatusHTML('Now playing: 「 ' + artist + ' - ' + title + ' 」  <a href="https://radio.shinpu.top" target="_blank"><br>radio.shinpu.top</a>');
-			
+
+        const title = mount?.title || "No info";
+        const artist = mount?.artist || "No info";
+
+        if (!window.audio || window.audio.paused) return;
+
+        displayStatusHTML(`Now playing: 「 ${artist} - ${title} 」  <a href="https://radio.shinpu.top" target="_blank"><br>radio.shinpu.top</a>`);
+
     } catch (err) {
         console.error("Failed to fetch Icecast metadata:", err);
-		
-		}
     }
+}
 
-
-updateRadioTrack();
-
+// Optionally update every 10s
 setInterval(updateRadioTrack, 10000);
 
 
@@ -574,4 +568,35 @@ function applyBassBoost() {
     return bassFilter;
 }
 
+function initRadioOptionsUI() {
+    const optionsBtn = document.getElementById('optionsBtn');
+    const overlay = document.getElementById('optionsOverlay');
+    const closeModal = document.getElementById('closeModal');
+    const saveRadio = document.getElementById('saveRadio');
+    const radioInput = document.getElementById('radioUrl');
+
+    if (!optionsBtn) return;
+
+    radioInput.value = localStorage.getItem('customRadioUrl') || '';
+
+    optionsBtn.onclick = () => overlay.classList.remove('hidden');
+    closeModal.onclick = () => overlay.classList.add('hidden');
+
+    overlay.onclick = e => {
+        if (e.target === overlay) overlay.classList.add('hidden');
+    };
+
+    saveRadio.onclick = async () => {
+        const url = radioInput.value.trim();
+        if (!url) return;
+
+        localStorage.setItem('customRadioUrl', url);
+
+        window.audio.pause();
+        window.audio.currentTime = 0;
+        window.audio.src = '';
+
+        location.reload();
+    };
+}
 })();
