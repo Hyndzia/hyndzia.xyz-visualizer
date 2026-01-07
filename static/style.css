@@ -10,6 +10,7 @@ body {
   padding: 20px;
   text-align: center;
   user-select: none;
+  zoom: 0.9;
 
   background-image: url('https://hyndzia.xyz/bkground.gif');
   background-repeat: no-repeat;      /* wyłącza powtarzanie */
@@ -388,7 +389,7 @@ ul#playlist {
 
   position: fixed;   
   top: 65%;          
-  right: 20px;       
+  right: 60px;       
   transform: translateY(-50%); 
 
   border-radius: 13px;
@@ -504,7 +505,6 @@ ul#playlist button:active {
 #playlist li:hover {
   background-color: rgba(163, 0, 0, 0); 
   box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
-  font-size: 1.04rem;
   cursor: pointer;
 }
 
@@ -617,6 +617,122 @@ footer {
 	text-shadow: none;
 }
 
+.options-btn {
+    all: unset;
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 99999;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(0,0,0,0.7);
+    color: #A30000;
+    font-family: 'UnifrakturCook', cursive;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.options-btn:hover {
+    background: #A30000;
+    color: #121212;
+}
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.75);
+    z-index: 99998;
+}
+
+.overlay.hidden {
+    display: none;
+}
+
+/* Modal window */
+.modal {
+    background: #121214;
+    border: 1px solid #A30000;
+    padding: 20px;
+    border-radius: 12px;
+    width: 320px;
+    max-width: 90vw;
+    box-shadow: 0 0 25px rgba(163,0,0,0.8);
+    transform: none !important;
+}
+.modal .color-btn {
+    font-family: 'UnifrakturCook', cursive;
+    text-shadow:
+       -2px -2px 0 black,
+        2px -2px 0 black,
+       -2px  2px 0 black,
+        2px  2px 0 black;
+    font-size: 1.2rem;
+    padding: 8px 15px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.modal .color-btn:hover {
+    background-color: rgba(163, 0, 0, 0.7);
+    color: #121212;
+    text-shadow: none;
+}
+
+.modal button {
+    margin-top: 0;
+    padding: 6px 12px;
+}
+
+.modal input {
+    width: 100%;
+    background: #1a1a1a;
+    color: #bbb6b6;
+    border: 1px solid #333;
+    padding: 8px;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: space-between;
+}
+
+.modal {
+   padding: 20px 20px;              
+  box-sizing: border-box;          
+  overflow: hidden;
+}
+
+.modal h2, .modal h3, .modal-title {
+  text-align: center;               
+  margin-top: 5px;
+  margin-bottom: 15px;
+}
+
+.modal input {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 8px 10px;
+}
+
+.modal-buttons {
+  justify-content: space-evenly;    
+  gap: 10px;                        
+}
+
+.modal .color-btn {
+  min-width: 110px;                 
+}
+
 @media (max-width: 420px) {
   ul#playlist {
     position: fixed;
@@ -624,7 +740,7 @@ footer {
     left: 50%;                 
     transform: translateX(-50%);
     width: 90%;                
-    max-width: 400px;         
+    max-width: 400px;          
     margin: 0;
     padding: 0;
     z-index: 9999;
