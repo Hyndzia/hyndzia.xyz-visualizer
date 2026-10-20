@@ -1,4 +1,5 @@
 import os
+from collections import Counter
 from flask import Flask, render_template, request, jsonify, session, send_file
 from datetime import timedelta
 import uuid
@@ -195,6 +196,29 @@ def skip_to(index):
     return jsonify({'status': 'error', 'message': 'Invalid index'})
 
 
+@app.route('/reorder', methods=['POST'])
+def reorder():
+    # Saves the queue order changed by drag & drop. Only the order may change:
+    # the new list has to contain exactly the same files as the current one.
+    playlist = session.get('playlist', [])
+    new_order = (request.get_json(silent=True) or {}).get('playlist')
+
+    if (not isinstance(new_order, list)
+            or not all(isinstance(name, str) for name in new_order)
+            or Counter(new_order) != Counter(playlist)):
+        return jsonify({'status': 'error', 'message': 'Invalid playlist'}), 400
+
+    # keep "current_index" pointing at the same song after it has moved
+    current_index = session.get('current_index', 0)
+    current_name = playlist[current_index] if 0 <= current_index < len(playlist) else None
+
+    session['playlist'] = new_order
+    if current_name is not None:
+        session['current_index'] = new_order.index(current_name)
+
+    return jsonify({'status': 'success', 'playlist': new_order})
+
+
 @app.route('/clear', methods=['POST'])
 def clear_playlist():
     playlist = session.get('playlist', [])
@@ -214,5 +238,3 @@ def clear_playlist():
 if __name__ == '__main__':
     threading.Thread(target=monitor_uploads, daemon=True).start()
     app.run(host="127.0.0.1", port=8989, debug=True)
-    
-

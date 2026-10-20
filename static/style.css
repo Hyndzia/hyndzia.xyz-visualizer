@@ -13,10 +13,10 @@ body {
   zoom: 0.9;
 
   background-image: url('https://hyndzia.xyz/bkground.gif');
-  background-repeat: no-repeat;      /* wyłącza powtarzanie */
-  background-size: cover;           /* rozciąga na cały ekran */
-  background-position: center;      /* wyśrodkowuje */
-  background-attachment: fixed;     /* opcjonalnie – żeby tło było nieruchome przy scrollu */
+  background-repeat: no-repeat;      
+  background-size: cover;           
+  background-position: center;      
+  background-attachment: fixed;     
 }
 .ripple {
   position: absolute;
@@ -733,6 +733,17 @@ footer {
   min-width: 110px;                 
 }
 
+#popupCanvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: block;
+  background: black;
+  z-index: 999999;
+}
+
 @media (max-width: 420px) {
   ul#playlist {
     position: fixed;
@@ -757,5 +768,3 @@ footer {
     font-size: 0.95rem;
   }
 }
-
-
