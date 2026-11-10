@@ -6,14 +6,14 @@ Built with **Python (Flask + Gunicorn)** on the backend and **JavaScript/HTML/CS
 <details>
   <summary>How it looks</summary>
 
-  ![](https://hyndzia.xyz/visdemo.webp)
+  ![](https://hyndzia.net/visdemo.webp)
 
-  ![](https://hyndzia.xyz/visdemo2.webp)
+  ![](https://hyndzia.net/visdemo2.webp)
 
-  ![](https://hyndzia.xyz/demo.png)
+  ![](https://hyndzia.net/demo.png)
 </details>
 
-[Try online version here!](https://hyndzia.xyz/visualizer)
+[Try online version here!](https://hyndzia.net/visualizer)
 
 ---
 
