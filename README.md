@@ -88,9 +88,8 @@ set `URL_PREFIX = '/visualizer'` in `.env` (or pass `-e URL_PREFIX=/visualizer` 
 
 ### Windows desktop application (Electron)
 
-The Electron app starts the bundled Python backend hidden, waits for the local
-server and shows the visualizer in a normal desktop window. It does not open a
-browser and the window has no Electron menu, DevTools or browser chrome.
+The Electron app starts the backend hidden, waits for the local
+server and shows the visualizer in a normal desktop window.
 
 ```powershell
 # PyInstaller is only needed for building, not for running the app
