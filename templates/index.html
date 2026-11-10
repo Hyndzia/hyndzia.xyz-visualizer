@@ -4,12 +4,58 @@
   <meta charset="utf-8" />
   <title>Online Visualizer</title>
   <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
-  <link rel="stylesheet" href="https://hyndzia.net/scripts/style.css">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css', v='7') }}">
   <link rel="icon" type="image/x-icon" href="https://hyndzia.net/favicon.ico">
+  <script>
+
+    window.APP_BASE = {{ request.script_root|tojson }};
+    window.appUrl = function (path) {
+      path = String(path || '');
+      if (path.charAt(0) !== '/') path = '/' + path;
+      return window.APP_BASE + path;
+    };
+
+
+    (function () {
+      var OLD_PREFIX = '/visualizer';
+      var REMOTE_COLORS = 'https://hyndzia.net/scripts/signalColors-config.json';
+
+      function fixUrl(url) {
+        if (typeof url !== 'string') return url;
+        if (url === REMOTE_COLORS) {
+          return window.appUrl('/static/scripts/signalColors-config.json');
+        }
+        if (url.indexOf(OLD_PREFIX + '/') === 0) {
+          return window.appUrl(url.slice(OLD_PREFIX.length));
+        }
+        return url;
+      }
+
+      var nativeFetch = window.fetch.bind(window);
+      window.fetch = function (resource, options) {
+        if (typeof resource === 'string') {
+          return nativeFetch(fixUrl(resource), options);
+        }
+        if (resource && typeof resource.url === 'string') {
+          return nativeFetch(fixUrl(resource.url), options);
+        }
+        return nativeFetch(resource, options);
+      };
+
+      var nativeOpen = window.XMLHttpRequest.prototype.open;
+      window.XMLHttpRequest.prototype.open = function (method, url) {
+        var args = Array.prototype.slice.call(arguments);
+        args[1] = fixUrl(url);
+        return nativeOpen.apply(this, args);
+      };
+    })();
+
+    window.SIGNAL_COLORS_URL = {{ url_for('static', filename='scripts/signalColors-config.json', v='7')|tojson }};
+  </script>
 
 </head>
 <body>
-	<button id="optionsBtn" class="options-btn" title="Radio options">⚙️</button>
+	<button id="optionsBtn" class="options-btn" title="Radio options" aria-label="Radio options">Radio</button>
 	<div class="wrapper">
 
 	<a class="back-link" href="https://hyndzia.net" title="Return to previous page">&larr; Return</a>
@@ -87,7 +133,7 @@
   </div>
 
  <footer>© 2026 hyndzia.net. All rights reserved.<br>
-		v0.4.6 [2026-10-20]</footer>
+		v0.5.0 [2026-11-09]</footer>
 
 <ul id="playlist">
   {% for song in playlist %}
@@ -113,17 +159,26 @@
       autocomplete="off"
     >
 
+    <div id="recentRadiosSection" class="recent-radios" hidden>
+      <span class="recent-radios-title">Recently played</span>
+      <ul id="recentRadiosList"></ul>
+    </div>
+
+    <label class="modal-checkbox" for="radioStartDisabled">
+      <input id="radioStartDisabled" type="checkbox" checked>
+      <span>Don't start radio automatically</span>
+    </label>
+
     <div class="modal-buttons">
       <button id="saveRadio" class="color-btn">Play</button>
       <button id="closeModal" class="color-btn">Cancel</button>
     </div>
   </div>
 </div>
-<script src="https://hyndzia.net/scripts/audio-player.js"></script>
-<script src="https://hyndzia.net/scripts/signal_analyzer.js"></script>
-<script src="https://hyndzia.net/scripts/uploadForm.js"></script>
-<script src="https://hyndzia.net/scripts/updatePlaylist.js"></script>
+<script src="{{ url_for('static', filename='scripts/audio-player.js', v='7') }}"></script>
+<script src="{{ url_for('static', filename='scripts/signal_analyzer.js', v='7') }}"></script>
+<script src="{{ url_for('static', filename='scripts/uploadForm.js', v='7') }}"></script>
+<script src="{{ url_for('static', filename='scripts/updatePlaylist.js', v='7') }}"></script>
 <script src="https://cdn.plyr.io/3.7.8/plyr.polyfilled.js"></script>
-<script src="https://hyndzia.net/scripts/barEffectControl.js"></script>
 </body>
 </html>

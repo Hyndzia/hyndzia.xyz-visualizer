@@ -13,14 +13,103 @@ document.addEventListener('DOMContentLoaded', () => {
     autoplay: false,
     invertTime: false 
 });
+    addQueueNavButtons(player);
     checkIsApp();
 	
-	fetch('/visualizer/playlist')
+	fetch(window.appUrl('/playlist'))
         .then(res => res.json())
         .then(data => {
             updatePlaylistUI(data.playlist || []);
         });
 });
+
+
+//  PREVIOUS / NEXT SONG BUTTONS IN THE PLYR CONTROLS
+const QUEUE_NAV_ICONS = {
+    prev: '<svg viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path d="M3 3h2v12H3zM15 3v12L6.5 9z"/></svg>',
+    next: '<svg viewBox="0 0 18 18" aria-hidden="true" focusable="false"><path d="M13 3h2v12h-2zM3 3v12l8.5-6z"/></svg>'
+};
+let queueNav = null; // { prev, next } once they are in the controls
+
+// position of the song that is playing now inside the queue, -1 when it is not in it
+function queueIndexOfCurrent() {
+    const list = window.currentPlaylist || [];
+    if (!window.currentFile || !list.length) return -1;
+    // the server sends the name as it is in the queue, the browser may hand it back percent-encoded
+    const raw = String(window.currentFile).split('/').pop();
+    let decoded = raw;
+    try { decoded = decodeURIComponent(raw); } catch (e) {}
+    return list.findIndex(song => song === raw || song === decoded);
+}
+
+function queueNavTarget(delta) {
+    const list = window.currentPlaylist || [];
+    const idx = queueIndexOfCurrent();
+    if (idx < 0) return -1;
+    let target = idx + delta;
+    if (target < 0) return -1;
+    if (target >= list.length) {
+        if (!window.queueLoop) return -1;
+        target = 0;
+    }
+    return target;
+}
+
+function queueNavGo(delta) {
+    const target = queueNavTarget(delta);
+    if (target >= 0 && typeof window.skipTo === 'function') window.skipTo(target);
+}
+
+function setQueueNavEnabled(btn, enabled) {
+    btn.disabled = !enabled;
+    btn.setAttribute('aria-disabled', String(!enabled));
+    btn.style.opacity = enabled ? '' : '0.35';
+    btn.style.pointerEvents = enabled ? '' : 'none';
+}
+
+function refreshQueueNav() {
+    if (!queueNav) return;
+    setQueueNavEnabled(queueNav.prev, queueNavTarget(-1) >= 0);
+    setQueueNavEnabled(queueNav.next, queueNavTarget(1) >= 0);
+}
+
+function makeQueueNavButton(kind, label) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'plyr__controls__item plyr__control queue-nav-btn';
+    btn.title = label;
+    btn.setAttribute('aria-label', label);
+    btn.innerHTML = QUEUE_NAV_ICONS[kind];
+    btn.addEventListener('click', () => queueNavGo(kind === 'prev' ? -1 : 1));
+    return btn;
+}
+
+function addQueueNavButtons(player) {
+    function inject() {
+        const controls = (player.elements && player.elements.controls) || document.querySelector('.plyr__controls');
+        const play = controls && controls.querySelector('[data-plyr="play"]');
+        if (!play || !play.parentNode) return false;
+        if (queueNav && queueNav.prev.parentNode === play.parentNode) return true; // already there
+
+        const prev = makeQueueNavButton('prev', 'Previous song');
+        const next = makeQueueNavButton('next', 'Next song');
+        play.parentNode.insertBefore(prev, play);
+        play.parentNode.insertBefore(next, play.nextSibling);
+        queueNav = { prev: prev, next: next };
+        refreshQueueNav();
+        return true;
+    }
+
+    inject();
+    if (typeof player.on === 'function') player.on('ready', inject);
+
+    
+    setInterval(() => {
+        if (!inject()) return;
+        refreshQueueNav();
+    }, 300);
+}
+
 
 window.audio = document.getElementById('audioPlayer');
 window.status = document.getElementById('status');
@@ -38,24 +127,29 @@ function checkIsApp(){
 	
 }
 
+
+let statusTimer = null;
+
 function displayStatus(message, duration) {
     const statusElement = document.getElementById('status');
+	clearTimeout(statusTimer);
 	statusElement.style.display = '';
     statusElement.textContent = message;
-	    if (typeof duration === 'number') {
-        setTimeout(() => {
+	if (typeof duration === 'number') {
+        statusTimer = setTimeout(() => {
             statusElement.textContent = '';
         }, duration);
-    } else return;
+    }
 }
 
 function displayStatusHTML(message, duration) {
     const statusEl = document.getElementById('status');
+	clearTimeout(statusTimer);
 	statusEl.style.display = '';
     statusEl.innerHTML = message; 
 
 	if (typeof duration === 'number') {
-			setTimeout(() => {
+		statusTimer = setTimeout(() => {
             statusEl.style.display = 'none';
         }, duration);
     }
@@ -72,6 +166,72 @@ function displayStatusHTML(message, duration) {
   window.isRadioPlaying = false;
   window.isPlaylistPlaying = false;
   document.addEventListener('DOMContentLoaded', initRadioOptionsUI);
+
+  const RECENT_RADIOS_KEY = 'recentRadioUrls';
+  const MAX_RECENT_RADIOS = 5;
+
+  function getRecentRadioUrls() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(RECENT_RADIOS_KEY) || '[]');
+      if (!Array.isArray(stored)) return [];
+      return stored
+        .filter(url => typeof url === 'string' && url.trim())
+        .map(url => url.trim())
+        .slice(0, MAX_RECENT_RADIOS);
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function formatRecentRadioLabel(url) {
+    try {
+      const parsed = new URL(url);
+      const path = parsed.pathname === '/' ? '' : parsed.pathname;
+      return parsed.host + path + parsed.search;
+    } catch (e) {
+      return url.replace(/^https?:\/\//, '');
+    }
+  }
+
+  function renderRecentRadios() {
+    const section = document.getElementById('recentRadiosSection');
+    const list = document.getElementById('recentRadiosList');
+    if (!section || !list) return;
+
+    const urls = getRecentRadioUrls();
+    list.textContent = '';
+    section.hidden = urls.length === 0;
+
+    urls.forEach(url => {
+      const item = document.createElement('li');
+      const button = document.createElement('button');
+
+      button.type = 'button';
+      button.textContent = formatRecentRadioLabel(url);
+      button.title = url;
+      button.setAttribute('aria-label', `Use recent radio: ${url}`);
+      button.addEventListener('click', () => {
+        const input = document.getElementById('radioUrl');
+        if (!input) return;
+        input.value = url;
+        input.focus();
+      });
+
+      item.appendChild(button);
+      list.appendChild(item);
+    });
+  }
+
+  function saveRecentRadioUrl(url) {
+    const normalized = (url || '').trim();
+    if (!normalized) return;
+
+    const recent = getRecentRadioUrls().filter(item => item !== normalized);
+    recent.unshift(normalized);
+
+    localStorage.setItem(RECENT_RADIOS_KEY, JSON.stringify(recent.slice(0, MAX_RECENT_RADIOS)));
+    renderRecentRadios();
+  }
   
 	async function playRadio(force = false) {
     const url = localStorage.getItem('customRadioUrl') || "https://radio.shinpu.top/radio.ogg";
@@ -95,38 +255,39 @@ function displayStatusHTML(message, duration) {
         await window.audio.play();
         window.isRadioPlaying = true;
         window.isPlaylistPlaying = false;
+        saveRecentRadioUrl(url);
         displayStatus("Now playing radio!", 4000);
-        updateRadioTrack(); // update the text preview immediately
+        updateRadioTrack(); 
     } catch (e) {
         displayStatus("Unable to start radio...", 4000);
     }
 }
 	let isRecon = true;
 	async function checkRadio(){
-		const url = "https://radio.shinpu.top/radio.ogg";
-		try {
-			const res = await fetch(url, {method: 'GET'});
-			if (!res.ok) throw new Error('Radio offline');
-			await playRadio();
+    const url = localStorage.getItem('customRadioUrl') || "https://radio.shinpu.top/radio.ogg";
+    try {
+        const res = await fetch(url, {method: 'GET'});
+        if (!res.ok) throw new Error('Radio offline');
+        await playRadio();
+    } catch (e) {
+        if(isRecon){
+            displayStatus("Reconnecting to the hikineet radio network...", 2000);
+        } else {
+            isRecon = false;
+            displayStatus("Hikineet radio is offline... try adding some mp3 files!", 5000);
+        }
+    }
+}
 
-		} catch (e) {
-			if(isRecon){
-				displayStatus("Reconnecting to the hikineet radio network...", 2000);
-			} else {
-				isRecon = false;
-				displayStatus("Hikineet radio is offline... try adding some mp3 files!", 5000);
-			}
-		}
+	const playRadioOnLoad = sessionStorage.getItem('playRadioOnLoad') === '1';
+	if (playRadioOnLoad) sessionStorage.removeItem('playRadioOnLoad');
+
+	const radioStartDisabled = localStorage.getItem('radioStartDisabled') !== '0';
+	if (!radioStartDisabled || playRadioOnLoad) {
+		checkRadio();
 	}
-	checkRadio();
 	
-  // Resize canvas
-  function resize(){
-    canvas.width = Math.min(window.innerWidth * 0.95, 1100);
-    canvas.height = 420;
-  }
-  window.addEventListener('resize', resize);
-  resize();
+
   
 async function playFile(src) {
     if (!src) {
@@ -154,42 +315,134 @@ async function playFile(src) {
 let lastTitle = "";
 let flag = 0;
 
+async function getShinpuMetadata() {
+    const res = await fetch('https://radio.shinpu.top/status-json.xsl');
+    const data = await res.json();
+
+    let mount = data.icestats.source;
+    if (Array.isArray(mount)) {
+        mount = mount.find(m => m.listenurl.endsWith('/radio.ogg'));
+    }
+
+    return {
+        artist: mount?.artist || "No info",
+        title: mount?.title || "No info"
+    };
+}
+
+// async function getGenericStreamMetadata(streamUrl) {
+    // try {
+        // const res = await fetch(
+            // `https://hyndzia.xyz/icy?url=${encodeURIComponent(streamUrl)}`
+        // );
+
+        // const data = await res.json();
+        // return {
+            // artist: data.artist || "No info",
+            // title: data.title || "No info"
+        // };
+    // } catch (err) {
+        // return { artist: "No info", title: "No info" };
+    // }
+// }
+
 async function updateRadioTrack() {
     if (!window.isRadioPlaying) return;
+    if (!window.audio) return;
+
+    console.log("Audio src:", window.audio.src);
 
     try {
-        const res = await fetch('https://radio.shinpu.top/status-json.xsl');
-        const data = await res.json();
+        // hikineet
+        if (window.audio.src.includes("radio.shinpu.top")) {
+            const res = await fetch('https://radio.shinpu.top/status-json.xsl');
+            const data = await res.json();
 
-        let mount = data.icestats.source;
-        if (Array.isArray(mount)) {
-            mount = mount.find(m => m.listenurl.endsWith('/radio.ogg'));
+            let mount = data.icestats.source;
+            if (Array.isArray(mount)) {
+                mount = mount.find(m => m.listenurl.endsWith('/radio.ogg'));
+            }
+
+            const title = mount?.title || "No info";
+            const artist = mount?.artist || "No info";
+
+            if (artist !== "No info" && title !== "No info") {
+                displayStatusHTML(
+                    `Now playing: 「 ${artist} - ${title} 」<br><a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a>`
+                );
+            } else if (artist !== "No info") {
+                displayStatusHTML(
+                    `Now playing: 「 ${artist} 」<br><a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a>`
+                );
+            } else if (title !== "No info") {
+                displayStatusHTML(
+                    `Now playing: 「 ${title} 」<br><a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a>`
+                );
+            } else {
+                displayStatusHTML("No metadata available for this stream.");
+            }
+
+            return;
         }
 
-        const title = mount?.title || "No info";
-        const artist = mount?.artist || "No info";
+        // stream via proxy
+        // const metadata = await getGenericStreamMetadata(window.audio.src);
+        // console.log("Metadata from proxy:", metadata);
 
-        if (!window.audio || window.audio.paused) return;
+        // const artist = metadata.artist || "No info";
+        // const title = metadata.title || "No info";
 
-        displayStatusHTML(`Now playing: 「 ${artist} - ${title} 」  <a href="https://radio.shinpu.top" target="_blank"><br>radio.shinpu.top</a>`);
+        // if (artist !== "No info" && title !== "No info") {
+            // displayStatusHTML(`Now playing: 「 ${artist} - ${title} 」<br>`);
+        // } else if (artist !== "No info") {
+            // displayStatusHTML(`Now playing: 「 ${artist} 」<br>`);
+        // } else if (title !== "No info") {
+            // displayStatusHTML(`Now playing: 「 ${title} 」<br>`);
+        // } else {
+            // displayStatusHTML("No metadata available for this stream.");
+        // }
 
     } catch (err) {
-        console.error("Failed to fetch Icecast metadata:", err);
+        console.error("Failed to fetch metadata:", err);
+        displayStatusHTML("Error fetching metadata.");
     }
 }
 
-// Optionally update every 10s
+// async function updateRadioTrack() {
+    // if (!window.isRadioPlaying) return;
+
+    // try {
+        // const res = await fetch('https://radio.shinpu.top/status-json.xsl');
+        // const data = await res.json();
+
+        // let mount = data.icestats.source;
+        // if (Array.isArray(mount)) {
+            // mount = mount.find(m => m.listenurl.endsWith('/radio.ogg'));
+        // }
+
+        // const title = mount?.title || "No info";
+        // const artist = mount?.artist || "No info";
+
+        // if (!window.audio || window.audio.paused) return;
+
+        // displayStatusHTML(`Now playing: 「 ${artist} - ${title} 」  <a href="https://radio.shinpu.top" target="_blank"><br>radio.shinpu.top</a>`);
+
+    // } catch (err) {
+        // console.error("Failed to fetch Icecast metadata:", err);
+    // }
+// }
+
 setInterval(updateRadioTrack, 10000);
 
 
 async function playNext() {
     if (window.currentFile) {
         // delete previous file from backend
-        await fetch('/visualizer/remove/' + encodeURIComponent(window.currentFile), { method: 'POST' });
+        await fetch(window.appUrl('/remove/' + encodeURIComponent(window.currentFile)), { method: 'POST' });
     }
 
     //request data from /next
-    const res = await fetch('/visualizer/next');
+    const res = await fetch(window.appUrl('/next'));
     const data = await res.json();
     updatePlaylistUI(data.playlist);
 
@@ -214,22 +467,30 @@ window.playFile = playFile;
 
   // Backend playlist logic
   async function fetchCurrent() {
-    const res = await fetch('/visualizer/current');
+    const res = await fetch(window.appUrl('/current'));
     const data = await res.json();
     return data.file;
   }
 
   async function fetchNext() {
-    const res = await fetch('/visualizer/next');
+    const res = await fetch(window.appUrl('/next'));
     const data = await res.json();
     return data.file;
   }
 
 
 audio.addEventListener('ended', async () => {
+    if (window.queueLoop && window.currentFile && typeof window.loopNext === 'function') {
+        try {
+            if (await window.loopNext()) return;
+        } catch (e) {
+            console.error('Queue loop failed:', e);
+        }
+    }
+
     const previousFile = currentFile;
 
-    const nextRes = await fetch('/visualizer/next');
+    const nextRes = await fetch(window.appUrl('/next'));
     const nextData = await nextRes.json();
     if (nextData.file != window.currentFile) {
         await playFile(nextData.file);
@@ -252,7 +513,7 @@ audio.addEventListener('ended', async () => {
 
     if (previousFile) {
         const fileName = previousFile.split('/').pop();
-        fetch('/visualizer/remove/' + encodeURIComponent(fileName), { method: 'POST' })
+        fetch(window.appUrl('/remove/' + encodeURIComponent(fileName)), { method: 'POST' })
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
@@ -262,310 +523,131 @@ audio.addEventListener('ended', async () => {
     }
 });
 
-function applySquareModulation() {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
+const FX_BUTTON_IDS = {
+    bassBoost: 'bassBoostBtn',
+    bitcrusher: 'bitcrusherBtn',
+    ringMod: 'ringModBtn',
+    phaser: 'phaserBtn',
+    delay: 'delayBtn',
+    phaseVocoder: 'phaseVocoderBtn'
+};
+
+let fxRestoreTimer = null;
+
+function showNowPlayingAgain() {
+    if (window.isPlaylistPlaying && window.currentFile) {
+        displayStatus('Now playing: ' + window.currentFile.split('/').pop());
+    } else if (window.isRadioPlaying) {
+        updateRadioTrack();
     }
-
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
-    }
-
-    const volumeGain = window.audioCtx.createGain();
-    volumeGain.gain.value = 0.5; // Base volume
-
-    const modulationGain = window.audioCtx.createGain();
-    const oscillator = window.audioCtx.createOscillator();
-
-    oscillator.type = 'square'; // 
-    oscillator.frequency.value = 50; // Hz, modulation speed
-
-    // Map oscillator output (-1 to +1) to usable gain range (0 to 1)
-    const modDepth = window.audioCtx.createGain();
-    modDepth.gain.value = 1.0; // Depth of modulation
-
-    oscillator.connect(modDepth).connect(modulationGain.gain);
-    window.source.connect(modulationGain).connect(volumeGain).connect(window.audioCtx.destination);
-
-    oscillator.start();
 }
 
-
-function applySawModulation() {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
-    }
-
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
-    }
-
-    // Gain node for final volume
-    const volumeGain = window.audioCtx.createGain();
-    volumeGain.gain.value = 0.5; // Base volume
-
-    const modulationGain = window.audioCtx.createGain();
-    const oscillator = window.audioCtx.createOscillator();
-	
-    oscillator.type = 'sawtooth';
-    oscillator.frequency.value = 50; // Hz, modulation speed
-
-    // Map oscillator output (-1 to +1) to a usable gain range (0 to 1)
-    const modDepth = window.audioCtx.createGain();
-    modDepth.gain.value = 1.0; // Depth of modulation
-    oscillator.connect(modDepth).connect(modulationGain.gain);
-    window.source.connect(modulationGain).connect(volumeGain).connect(window.audioCtx.destination);
-
-    oscillator.start();
+function paintFxButton(btn, on) {
+    btn.classList.toggle('active', on);
+    btn.style.backgroundColor = on ? 'rgba(23, 143, 0, 0.6)' : '';
+    btn.style.color = on ? '#121212' : '#a30000';
 }
 
+function initEffectButtons(fx) {
+    const labels = {};
+    fx.list().forEach(item => { labels[item.id] = item.label; });
 
-function applyDelay(time = 0.4, feedbackGain = 0.2) {
-    if (!window.audioCtx) window.audioCtx = new AudioContext();
-    if (!window.source) window.source = window.audioCtx.createMediaElementSource(window.audio);
+    // Existing effect buttons, used as a template for the missing ones
+    const existing = Object.values(FX_BUTTON_IDS)
+        .map(id => document.getElementById(id))
+        .filter(Boolean);
+    const template = existing[0] || null;
+    let anchor = existing.length
+        ? existing.reduce((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) ? b : a)
+        : null;
 
-    const delayNode = window.audioCtx.createDelay();
-    delayNode.delayTime.value = time;
+    // Effects with an adjustable value (phase vocoder pitch) get a "-" and "+" button
+    // next to their button; they are visible only while the effect is on. They are hidden with
+    // visibility (not display) so they keep their space and never shift the other buttons.
+    const steppers = {};
 
-    const feedback = window.audioCtx.createGain();
-    feedback.gain.value = feedbackGain;
-
-    delayNode.connect(feedback);
-    feedback.connect(delayNode);
-
-    return { delayNode, feedback };
-}
-
-
-function applyPhaser() {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
-    }
-    if (!window.source) {
-        window.source = window.audioCtx.createMediaElementSource(window.audio);
+    function showValue(id) {
+        displayStatus(labels[id] + ': ' + fx.valueLabel(id), 2000);
+        clearTimeout(fxRestoreTimer);
+        fxRestoreTimer = setTimeout(showNowPlayingAgain, 2100);
     }
 
-    const filters = [];
-    for (let i = 0; i < 4; i++) {
-        const filter = window.audioCtx.createBiquadFilter();
-        filter.type = 'allpass';
-        filter.frequency.value = 1000 * (i + 1);
-        filters.push(filter);
+    function createStepper(id, btn) {
+        const make = (text, delta, title) => {
+            const b = document.createElement('button');
+            b.type = 'button';
+            b.className = btn.className;
+            b.textContent = text;
+            b.title = title;
+            b.style.visibility = 'hidden';
+            b.addEventListener('click', () => {
+                fx.adjust(id, delta);
+                showValue(id);
+            });
+            return b;
+        };
+        const minus = make('−', -1, 'Pitch down by 1 semitone');
+        const plus = make('+', 1, 'Pitch up by 1 semitone');
+        btn.parentNode.insertBefore(minus, btn.nextSibling);
+        minus.parentNode.insertBefore(plus, minus.nextSibling);
+        steppers[id] = [minus, plus];
+        anchor = plus;
     }
 
-    for (let i = 0; i < filters.length - 1; i++) {
-        filters[i].connect(filters[i + 1]);
+    function updateStepper(id, on) {
+        if (steppers[id]) steppers[id].forEach(b => { b.style.visibility = on ? 'visible' : 'hidden'; });
     }
 
-    const lfo = window.audioCtx.createOscillator();
-    lfo.type = 'sine';
-    lfo.frequency.value = 0.5;
-
-    const lfoGain = window.audioCtx.createGain();
-    lfoGain.gain.value = 500;
-
-    lfo.connect(lfoGain);
-    lfoGain.connect(filters[0].frequency);
-
-    window.source.connect(filters[0]);
-    filters[filters.length - 1].connect(window.gainNode);
-	window.gainNode.connect(window.audioCtx.destination);
-
-    lfo.start();
-	
-    return { filters, lfo, lfoGain };
-}
-
-function applyBitcrusher(bits = 4, normFreq = 0.05) {
-    if (!window.audioCtx) {
-        window.audioCtx = new AudioContext();
-    }
-
-    const audioCtx = window.audioCtx;
-
-    if (!window.source) {
-        window.source = audioCtx.createMediaElementSource(window.audio);
-    }
-
-    if (window.bitcrusherNode) {
-        window.bitcrusherNode.disconnect();
-    }
-
-    const bufferSize = 4096;
-    const node = audioCtx.createScriptProcessor(bufferSize, 1, 1);
-    const step = Math.pow(0.5, bits);
-    let phaser = 0;
-    let last = 0;
-
-    node.onaudioprocess = function(e) {
-        const input = e.inputBuffer.getChannelData(0);
-        const output = e.outputBuffer.getChannelData(0);
-        for (let i = 0; i < input.length; i++) {
-            phaser += normFreq;
-            if (phaser >= 1.0) {
-                phaser -= 1.0;
-                last = step * Math.floor(input[i] / step + 0.5);
-            }
-            output[i] = last;
+    // Hide buttons of effects this browser can't do
+    Object.keys(FX_BUTTON_IDS).forEach(id => {
+        if (!fx.has(id)) {
+            const el = document.getElementById(FX_BUTTON_IDS[id]);
+            if (el) el.style.display = 'none';
         }
-    };
+    });
 
-    window.bitcrusherNode = node;
-    window.source.disconnect();
-    window.source.connect(window.bitcrusherNode);
-    window.bitcrusherNode.connect(window.analyser);
-    window.analyser.connect(window.gainNode);
-	window.gainNode.connect(audioCtx.destination);
-	
-	return node;
+    fx.order.forEach(id => {
+        const btnId = FX_BUTTON_IDS[id];
+        let btn = document.getElementById(btnId);
+
+        if (!btn && template && anchor) {
+            btn = template.cloneNode(true);
+            btn.id = btnId;
+            btn.textContent = labels[id];
+            btn.classList.remove('active');
+            btn.style.backgroundColor = '';
+            btn.style.color = '';
+            anchor.parentNode.insertBefore(btn, anchor.nextSibling);
+            anchor = btn;
+        }
+        if (!btn) return;
+
+        paintFxButton(btn, fx.isOn(id));
+        btn.addEventListener('click', () => fx.toggle(id));
+
+        if (fx.hasStepper(id)) {
+            createStepper(id, btn);
+            updateStepper(id, fx.isOn(id));
+        }
+    });
+
+    fx.onChange((id, on) => {
+        const btn = document.getElementById(FX_BUTTON_IDS[id]);
+        if (btn) paintFxButton(btn, on);
+
+        updateStepper(id, on);
+
+        const valueInfo = on && fx.hasStepper(id) ? ' (' + fx.valueLabel(id) + ')' : '';
+        displayStatus(labels[id] + (on ? ' enabled' : ' disabled') + valueInfo, 2000);
+        clearTimeout(fxRestoreTimer);
+        fxRestoreTimer = setTimeout(showNowPlayingAgain, 2100);
+    });
 }
 
-function checkResumeStatus(flag, currentFile){
-	if (flag && currentFile) {
-            setTimeout(() => {
-                displayStatus('Now playing: ' + currentFile.split('/').pop());
-            }, 2100);
-        } else return;
-}
-
-let bitcrusherNode = null; 
-
-document.getElementById('bitcrusherBtn').addEventListener('click', () => {
-    const btn = document.getElementById('bitcrusherBtn');
-    if (!bitcrusherNode) {
-        bitcrusherNode = applyBitcrusher(16, 0.17);
-        displayStatus('Bitcrusher enabled', 2000);
-        checkResumeStatus(isPlaylistPlaying, window.currentFile);
-        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
-        btn.style.color = '#121212';
-    } else {
-        window.bitcrusherNode.disconnect();
-        window.source.disconnect();
-        window.source.connect(window.analyser);
-        window.analyser.connect(window.gainNode);
-        window.gainNode.connect(audioCtx.destination);
-
-        bitcrusherNode = null;
-        displayStatus('Bitcrusher disabled', 2000);
-
-        checkResumeStatus(isPlaylistPlaying, window.currentFile);
-
-        btn.style.backgroundColor = '';
-        btn.style.color = '#a30000';
-    }
-});
-
-let phaserNode = null;
-
-document.getElementById('phaserBtn').addEventListener('click', () => {
-    const btn = document.getElementById('phaserBtn');
-
-    if (!phaserNode) {
-        phaserNode = applyPhaser(); 
-        displayStatus('Phaser enabled', 2000);
-		checkResumeStatus(isPlaylistPlaying, window.currentFile);
-        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
-		btn.style.color = '#121212';
-
-    } else {
-        phaserNode.lfo.stop();
-        phaserNode.filters.forEach(f => f.disconnect());
-        window.source.disconnect();
-        window.source.connect(window.analyser);
-        window.analyser.connect(window.gainNode);
-		window.gainNode.connect(window.audioCtx.destination);
-        phaserNode = null;
-        displayStatus('Phaser disabled', 2000);
-		checkResumeStatus(isPlaylistPlaying, window.currentFile);
-        btn.style.backgroundColor = '';
-		btn.style.color = '#a30000';
-    }
-});
-
-let delayEffect = null;
-
-document.getElementById('delayBtn').addEventListener('click', () => {
-    const btn = document.getElementById('delayBtn');
-
-    if (!delayEffect) {
-        delayEffect = applyDelay();
-        window.source.disconnect();
-        window.source.connect(window.analyser);
-        window.analyser.disconnect();
-        window.analyser.connect(delayEffect.delayNode).connect(window.gainNode);
-		window.gainNode.connect(window.audioCtx.destination);
-
-        displayStatus('Delay enabled', 2000);
-		checkResumeStatus(isPlaylistPlaying, window.currentFile);
-        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
-		btn.style.color = '#121212';
-    } else {
-        window.analyser.disconnect();
-        window.analyser.connect(window.gainNode);
-		window.gainNode.connect(window.audioCtx.destination);
-
-        if (delayEffect.delayNode) delayEffect.delayNode.disconnect();
-        if (delayEffect.feedback) delayEffect.feedback.disconnect();
-
-        delayEffect = null;
-        displayStatus('Delay disabled', 2000);
-		checkResumeStatus(isPlaylistPlaying, window.currentFile);
-        btn.style.backgroundColor = '';
-		btn.style.color = '#a30000'
-    }
-});
-
-let bassNode = null;
-let bassGain = null;
-
-document.getElementById('bassBoostBtn').addEventListener('click', () => {
-    const btn = document.getElementById('bassBoostBtn');
-
-    if (!bassNode) {
-        bassNode = applyBassBoost();
-
-        bassGain = window.audioCtx.createGain();
-        bassGain.gain.value = 1.5; // np. 1.5x podbicie
-
-        window.source.disconnect();
-
-        window.source.connect(window.analyser);
-
-        window.source.connect(bassNode);
-        bassNode.connect(bassGain);
-        bassGain.connect(window.gainNode);
-        window.gainNode.connect(window.audioCtx.destination);
-
-        displayStatus('Bass boost enabled', 2000);
-		checkResumeStatus(isPlaylistPlaying, window.currentFile);
-        btn.style.backgroundColor = 'rgba(23, 143, 0, 0.6)';
-        btn.style.color = '#121212';
-
-    } else {
-        window.source.disconnect();
-        if (bassNode) bassNode.disconnect();
-        if (bassGain) bassGain.disconnect();
-
-        window.source.connect(window.analyser);
-        window.source.connect(window.gainNode);
-        window.gainNode.connect(window.audioCtx.destination);
-
-        bassNode = null;
-        bassGain = null;
-
-        displayStatus('Bass boost disabled', 2000);
-		checkResumeStatus(isPlaylistPlaying, window.currentFile);
-        btn.style.backgroundColor = '';
-        btn.style.color = '#a30000';
-    }
-});
-
-function applyBassBoost() {
-    const bassFilter = window.audioCtx.createBiquadFilter();
-    bassFilter.type = "lowshelf";
-    bassFilter.frequency.value = 200;
-    bassFilter.gain.value = 5;
-    return bassFilter;
+if (window.fx) {
+    initEffectButtons(window.fx);
+} else {
+    window.addEventListener('fx-ready', () => initEffectButtons(window.fx), { once: true });
 }
 
 function initRadioOptionsUI() {
@@ -574,12 +656,31 @@ function initRadioOptionsUI() {
     const closeModal = document.getElementById('closeModal');
     const saveRadio = document.getElementById('saveRadio');
     const radioInput = document.getElementById('radioUrl');
+    const startDisabledCheckbox = document.getElementById('radioStartDisabled');
 
     if (!optionsBtn) return;
 
-    radioInput.value = localStorage.getItem('customRadioUrl') || '';
+    const syncStartDisabledCheckbox = () => {
+        if (!startDisabledCheckbox) return;
+        startDisabledCheckbox.checked = localStorage.getItem('radioStartDisabled') !== '0';
+    };
 
-    optionsBtn.onclick = () => overlay.classList.remove('hidden');
+    radioInput.value = localStorage.getItem('customRadioUrl') || '';
+    syncStartDisabledCheckbox();
+    renderRecentRadios();
+
+    if (startDisabledCheckbox) {
+        startDisabledCheckbox.addEventListener('change', () => {
+            localStorage.setItem('radioStartDisabled', startDisabledCheckbox.checked ? '1' : '0');
+        });
+    }
+
+    optionsBtn.onclick = () => {
+        radioInput.value = localStorage.getItem('customRadioUrl') || '';
+        syncStartDisabledCheckbox();
+        renderRecentRadios();
+        overlay.classList.remove('hidden');
+    };
     closeModal.onclick = () => overlay.classList.add('hidden');
 
     overlay.onclick = e => {
@@ -588,10 +689,20 @@ function initRadioOptionsUI() {
 
     saveRadio.onclick = async () => {
         const url = radioInput.value.trim();
-        if (!url) return;
+        if (url) {
+            localStorage.setItem('customRadioUrl', url);
+        } else {
+            localStorage.removeItem('customRadioUrl');
+        }
 
-        localStorage.setItem('customRadioUrl', url);
+        localStorage.setItem(
+            'radioStartDisabled',
+            startDisabledCheckbox && !startDisabledCheckbox.checked ? '0' : '1'
+        );
 
+        overlay.classList.add('hidden');
+
+        sessionStorage.setItem('playRadioOnLoad', '1');
         window.audio.pause();
         window.audio.currentTime = 0;
         window.audio.src = '';
@@ -599,4 +710,5 @@ function initRadioOptionsUI() {
         location.reload();
     };
 }
+
 })();

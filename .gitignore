@@ -8,3 +8,8 @@ uploads/
 __pycache__/
 
 cookies.txt
+
+secret.key
+build/backend/
+dist/
+Visualizer.spec

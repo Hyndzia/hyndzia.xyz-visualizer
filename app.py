@@ -1,6 +1,7 @@
+import mimetypes
 import os
 from collections import Counter
-from flask import Flask, render_template, request, jsonify, session, send_file
+from flask import Flask, render_template, request, jsonify, session, send_file, url_for
 from datetime import timedelta
 import uuid
 from werkzeug.utils import secure_filename
@@ -14,7 +15,50 @@ load_dotenv()
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)
 
-UPLOAD_FOLDER = 'uploads'
+
+def normalize_url_prefix(value):
+    value = (value or '').strip()
+    if not value or value == '/':
+        return ''
+    return '/' + value.strip('/')
+
+
+# The app is served from the site root locally, but production may mount it
+# under a subpath (e.g. https://hyndzia.net/visualizer). Set URL_PREFIX there so
+# every generated link (static files, audio files, API calls) keeps that prefix.
+URL_PREFIX = normalize_url_prefix(os.getenv('URL_PREFIX'))
+
+
+class PrefixMiddleware:
+
+    def __init__(self, wsgi_app, prefix):
+        self.wsgi_app = wsgi_app
+        self.prefix = prefix
+
+    def __call__(self, environ, start_response):
+        if self.prefix:
+            path = environ.get('PATH_INFO') or '/'
+            if path == self.prefix or path.startswith(self.prefix + '/'):
+                environ['SCRIPT_NAME'] = self.prefix
+                environ['PATH_INFO'] = path[len(self.prefix):] or '/'
+            elif not environ.get('SCRIPT_NAME'):
+                # The proxy already removed the prefix, but generated URLs and
+                # the static route still have to know where the app lives.
+                environ['SCRIPT_NAME'] = self.prefix
+
+        return self.wsgi_app(environ, start_response)
+
+
+app.wsgi_app = PrefixMiddleware(app.wsgi_app, URL_PREFIX)
+
+@app.after_request
+def disable_stale_cache(response):
+    if request.path.startswith('/static/') or response.mimetype == 'text/html':
+        response.headers['Cache-Control'] = 'no-store, max-age=0'
+    return response
+
+
+UPLOAD_FOLDER = os.path.abspath('uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 ALLOWED_EXTENSIONS = {'mp3', 'wav', 'm4u', 'ogg'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -132,7 +176,8 @@ def get_file(filename):
             session['playlist'] = playlist
         return jsonify({'status': 'missing', 'playlist': playlist})
 
-    return send_file(file_path, mimetype='audio/mpeg')
+    mimetype = mimetypes.guess_type(filename)[0] or 'audio/mpeg'
+    return send_file(file_path, mimetype=mimetype)
 
 @app.route('/current')
 def current():
@@ -143,7 +188,7 @@ def current():
         return jsonify({'file': None})
 
     current_file = playlist[idx]
-    return jsonify({'file': f"/visualizer/file/{current_file}"})
+    return jsonify({'file': url_for('get_file', filename=current_file)})
 
 
 @app.route('/next')
@@ -160,7 +205,7 @@ def next_track():
 
     session['current_index'] = next_index
     next_file = playlist[next_index]
-    return jsonify({'file': f"/visualizer/file/{next_file}", 'playlist': playlist})
+    return jsonify({'file': url_for('get_file', filename=next_file), 'playlist': playlist})
 
 @app.route('/playlist')
 def get_playlist():
@@ -192,7 +237,7 @@ def skip_to(index):
     playlist = session.get('playlist', [])
     if 0 <= index < len(playlist):
         session['current_index'] = index
-        return jsonify({'status': 'success', 'file': f"/visualizer/file/{playlist[index]}"})
+        return jsonify({'status': 'success', 'file': url_for('get_file', filename=playlist[index])})
     return jsonify({'status': 'error', 'message': 'Invalid index'})
 
 

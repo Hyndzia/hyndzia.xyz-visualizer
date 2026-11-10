@@ -8,7 +8,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
         return;
     }
 
-    const playlistRes = await fetch('/visualizer/playlist');
+    const playlistRes = await fetch(window.appUrl('/playlist'));
     const playlistData = await playlistRes.json();
     const currentFiles = playlistData.playlist.map(f => f.split('/').pop());
 
@@ -22,7 +22,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
     }
 
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/visualizer/upload', true);
+    xhr.open('POST', window.appUrl('/upload'), true);
 
     const progressBar = document.getElementById('progress-bar');
     const progressContainer = document.getElementById('progress-container');
@@ -43,7 +43,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
             const data = JSON.parse(xhr.responseText);
             document.getElementById('message').innerText = data.message;
 
-            const playlistRes = await fetch('/visualizer/playlist');
+            const playlistRes = await fetch(window.appUrl('/playlist'));
             const playlistData = await playlistRes.json();
             updatePlaylistUI(playlistData.playlist);
             fileInput.value = '';

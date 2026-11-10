@@ -1,0 +1,61 @@
+{
+  "name": "visualizer-desktop",
+  "version": "0.2.0.0",
+  "description": "Hyndzia Visualizer desktop application",
+  "main": "main.js",
+  "author": "hyndzia.net",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder --win portable --publish never"
+  },
+  "build": {
+    "appId": "net.hyndzia.visualizer",
+    "productName": "Visualizer",
+    "copyright": "Copyright © 2026 hyndzia.net",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "loading.html",
+      "icon.ico",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/Visualizer.exe",
+        "to": "backend/Visualizer.exe"
+      }
+    ],
+    "asar": true,
+    "npmRebuild": false,
+    "compression": "normal",
+    "electronFuses": {
+      "enableEmbeddedAsarIntegrityValidation": false
+    },
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "icon.ico",
+      "artifactName": "Visualizer-${version}.${ext}"
+    },
+    "portable": {
+      "artifactName": "Visualizer-${version}.${ext}",
+      "requestExecutionLevel": "user",
+      "unpackDirName": false
+    }
+  },
+  "devDependencies": {
+    "electron": "^37.10.3",
+    "electron-builder": "^26.18.0"
+  }
+}

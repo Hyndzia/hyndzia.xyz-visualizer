@@ -1,12 +1,16 @@
 #!/bin/bash
 
-CONTAINER_NAME="visual_container"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+
+CONTAINER_NAME="visualizer"
 IMAGE_NAME="visual"
 PORT="8989:8989"
-COOKIE_FILE_PATH="$(pwd)/cookies.txt" 
+COOKIE_FILE_PATH="${PROJECT_ROOT}/cookies.txt" 
+DOCKERFILE="${SCRIPT_DIR}/Dockerfile"
 
 echo "Building Docker image '${IMAGE_NAME}'..."
-sudo docker build -t ${IMAGE_NAME} .
+sudo docker build -f "${DOCKERFILE}" -t ${IMAGE_NAME} "${PROJECT_ROOT}"
 
 if [ "$(sudo docker ps -aq -f name=^${CONTAINER_NAME}$)" ]; then
     echo "Container '${CONTAINER_NAME}' exists. Removing..."
