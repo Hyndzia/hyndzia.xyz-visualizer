@@ -150,7 +150,7 @@ $ElectronDist = Join-Path $DesktopRoot 'dist'
 $ArtifactsToCopy = @()
 
 if ($Package -eq 'NSIS' -or $Package -eq 'All') {
-    $BuiltNsis = Get-ChildItem -LiteralPath $ElectronDist -File -Filter 'Visualizer-*-Setup.exe' |
+    $BuiltNsis = Get-ChildItem -LiteralPath $ElectronDist -File -Filter 'Visualizer-Setup.exe' |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
