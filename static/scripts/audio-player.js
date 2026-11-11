@@ -346,67 +346,78 @@ async function getShinpuMetadata() {
     // }
 // }
 
-async function updateRadioTrack() {
-    if (!window.isRadioPlaying) return;
-    if (!window.audio) return;
 
-    console.log("Audio src:", window.audio.src);
+function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, char => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    })[char]);
+}
+
+function radioLinkHTML(streamUrl) {
+    let href = streamUrl;
+    let label = streamUrl;
 
     try {
-        // hikineet
-        if (window.audio.src.includes("radio.shinpu.top")) {
-            const res = await fetch('https://radio.shinpu.top/status-json.xsl');
-            const data = await res.json();
+        const parsed = new URL(streamUrl);
+        if (parsed.hostname === 'radio.shinpu.top') {
+            // jak wcześniej: link do strony radia, nie do pliku .ogg
+            href = 'https://radio.shinpu.top';
+            label = 'radio.shinpu.top';
+        } else {
+            const path = parsed.pathname === '/' ? '' : parsed.pathname;
+            label = parsed.host + path;
+        }
+    } catch (e) {}
 
-            let mount = data.icestats.source;
-            if (Array.isArray(mount)) {
-                mount = mount.find(m => m.listenurl.endsWith('/radio.ogg'));
-            }
+    return `<a href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${escapeHTML(label)}</a>`;
+}
 
-            const title = mount?.title || "No info";
-            const artist = mount?.artist || "No info";
+async function updateRadioTrack() {
+    if (!window.isRadioPlaying || !window.audio) return;
 
-            if (artist !== "No info" && title !== "No info") {
-                displayStatusHTML(
-                    `Now playing: 「 ${artist} - ${title} 」<br><a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a>`
-                );
-            } else if (artist !== "No info") {
-                displayStatusHTML(
-                    `Now playing: 「 ${artist} 」<br><a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a>`
-                );
-            } else if (title !== "No info") {
-                displayStatusHTML(
-                    `Now playing: 「 ${title} 」<br><a href="https://radio.shinpu.top" target="_blank">radio.shinpu.top</a>`
-                );
-            } else {
-                displayStatusHTML("No metadata available for this stream.");
-            }
+    const streamUrl = window.audio.currentSrc || window.audio.src;
 
-            return;
+    if (!streamUrl) return;
+
+    try {
+        const res = await fetch(
+            window.appUrl(
+                '/api/radio/now-playing?url=' +
+                encodeURIComponent(streamUrl)
+            ),
+            { cache: 'no-store' }
+        );
+
+        if (!res.ok) throw new Error('Metadata request failed');
+
+        const data = await res.json();
+
+        if (data.has_metadata && data.title) {
+            // tytuł + pod spodem link do radia
+            displayStatusHTML(
+                `Now playing: 「 ${escapeHTML(data.title)} 」<br>${radioLinkHTML(data.stream_url || streamUrl)}`
+            );
+        } else {
+            // brak metadanych: sam link jako "now playing"
+            displayStatusHTML(
+                `Now playing: ${radioLinkHTML(data.stream_url || streamUrl)}`
+            );
         }
 
-        // stream via proxy
-        // const metadata = await getGenericStreamMetadata(window.audio.src);
-        // console.log("Metadata from proxy:", metadata);
-
-        // const artist = metadata.artist || "No info";
-        // const title = metadata.title || "No info";
-
-        // if (artist !== "No info" && title !== "No info") {
-            // displayStatusHTML(`Now playing: 「 ${artist} - ${title} 」<br>`);
-        // } else if (artist !== "No info") {
-            // displayStatusHTML(`Now playing: 「 ${artist} 」<br>`);
-        // } else if (title !== "No info") {
-            // displayStatusHTML(`Now playing: 「 ${title} 」<br>`);
-        // } else {
-            // displayStatusHTML("No metadata available for this stream.");
-        // }
-
     } catch (err) {
-        console.error("Failed to fetch metadata:", err);
-        displayStatusHTML("Error fetching metadata.");
+        console.error('Failed to fetch radio metadata:', err);
+
+        displayStatusHTML(
+            `Radio: ${radioLinkHTML(streamUrl)}`
+        );
     }
 }
+
+
 
 // async function updateRadioTrack() {
     // if (!window.isRadioPlaying) return;

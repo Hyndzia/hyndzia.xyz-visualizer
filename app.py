@@ -8,6 +8,11 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import threading
 import time
+import re
+import ipaddress
+import socket
+from urllib.parse import urlparse, urljoin
+import requests
 
 app = Flask(__name__)
 load_dotenv()
@@ -277,7 +282,125 @@ def clear_playlist():
     session['current_index'] = 0
 
     return jsonify({'status': 'success', 'playlist': []})
-    
+
+# ---------- Radio "now playing" ----------
+SHINPU_HOST = 'radio.shinpu.top'
+_radio_cache = {}  # url -> (timestamp, result)
+RADIO_CACHE_SECONDS = 8
+
+
+def is_public_http_url(url):
+    """Only allow http(s) URLs that resolve to public IPs (blocks SSRF to localhost/LAN)."""
+    try:
+        p = urlparse(url)
+        if p.scheme not in ('http', 'https') or not p.hostname:
+            return False
+        port = p.port or (443 if p.scheme == 'https' else 80)
+        for info in socket.getaddrinfo(p.hostname, port, proto=socket.IPPROTO_TCP):
+            if not ipaddress.ip_address(info[4][0]).is_global:
+                return False
+        return True
+    except (ValueError, socket.gaierror):
+        return False
+
+
+def _read_exact(raw, n):
+    buf = b''
+    while len(buf) < n:
+        chunk = raw.read(n - len(buf))
+        if not chunk:
+            raise EOFError('stream ended')
+        buf += chunk
+    return buf
+
+
+def read_icy_title(url, timeout=6):
+    """Returns StreamTitle string, or None if the stream has no usable ICY metadata."""
+    headers = {
+        'Icy-MetaData': '1',
+        'Accept-Encoding': 'identity',
+        'User-Agent': 'Mozilla/5.0 (VisualizerApp radio metadata)',
+    }
+    current = url
+    resp = None
+    for _ in range(4):  # follow a few redirects, re-validating every hop
+        if not is_public_http_url(current):
+            return None
+        resp = requests.get(current, headers=headers, stream=True,
+                            timeout=timeout, allow_redirects=False)
+        if resp.status_code in (301, 302, 303, 307, 308):
+            current = urljoin(current, resp.headers.get('Location', ''))
+            resp.close()
+            resp = None
+            continue
+        break
+    if resp is None:
+        return None
+
+    try:
+        if not resp.ok:
+            return None
+        metaint = resp.headers.get('icy-metaint', '')
+        if not metaint.isdigit() or not (0 < int(metaint) <= 1_000_000):
+            return None
+        metaint = int(metaint)
+
+        # Audio bytes, then 1 length byte (x16), then the metadata block.
+        # An empty block is normal between songs, so look at a few blocks.
+        for _ in range(3):
+            _read_exact(resp.raw, metaint)
+            length = _read_exact(resp.raw, 1)[0] * 16
+            if not length:
+                continue
+            block = _read_exact(resp.raw, length).rstrip(b'\0')
+            try:
+                text = block.decode('utf-8')
+            except UnicodeDecodeError:
+                text = block.decode('latin-1')
+            m = re.search(r"StreamTitle='(.*?)';", text, re.S) or \
+                re.search(r"StreamTitle='(.*)'", text, re.S)
+            if m and m.group(1).strip():
+                return m.group(1).strip()
+        return None
+    except (EOFError, requests.RequestException, OSError):
+        return None
+    finally:
+        resp.close()
+
+
+def shinpu_title():
+    """Shinpu is Icecast/Ogg, so it uses its status-json instead of ICY."""
+    try:
+        data = requests.get(f'https://{SHINPU_HOST}/status-json.xsl', timeout=5).json()
+        mount = data['icestats']['source']
+        if isinstance(mount, list):
+            mount = next((m for m in mount if m.get('listenurl', '').endswith('/radio.ogg')), None)
+        if not mount:
+            return None
+        artist, title = mount.get('artist'), mount.get('title')
+        if artist and title:
+            return f'{artist} - {title}'
+        return title or artist or None
+    except Exception:
+        return None
+
+
+@app.route('/api/radio/now-playing')
+def radio_now_playing():
+    url = request.args.get('url', '').strip()
+    if not is_public_http_url(url):
+        return jsonify({'has_metadata': False, 'title': None, 'stream_url': url}), 400
+
+    cached = _radio_cache.get(url)
+    if cached and time.time() - cached[0] < RADIO_CACHE_SECONDS:
+        return jsonify(cached[1])
+
+    host = (urlparse(url).hostname or '').lower()
+    title = shinpu_title() if host == SHINPU_HOST else read_icy_title(url)
+
+    result = {'has_metadata': bool(title), 'title': title, 'stream_url': url}
+    _radio_cache[url] = (time.time(), result)
+    return jsonify(result)    
 
 if __name__ == '__main__':
     threading.Thread(target=monitor_uploads, daemon=True).start()
