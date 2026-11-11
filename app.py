@@ -8,7 +8,6 @@ from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 import threading
 import time
-import yt_dlp
 
 app = Flask(__name__)
 load_dotenv()
