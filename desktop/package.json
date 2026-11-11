@@ -1,6 +1,7 @@
+
 {
   "name": "visualizer-desktop",
-  "version": "0.2.0.0",
+  "version": "0.2.0",
   "description": "Hyndzia Visualizer desktop application",
   "main": "main.js",
   "author": "hyndzia.net",
@@ -8,7 +9,9 @@
   "scripts": {
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --win portable --publish never"
+    "dist:portable": "electron-builder --win portable --x64 --publish never",
+    "dist:nsis": "electron-builder --win nsis --x64 --publish never",
+    "dist:all": "npm run dist:nsis && npm run dist:portable"
   },
   "build": {
     "appId": "net.hyndzia.visualizer",
@@ -37,19 +40,24 @@
       "enableEmbeddedAsarIntegrityValidation": false
     },
     "win": {
-      "target": [
-        {
-          "target": "portable",
-          "arch": [
-            "x64"
-          ]
-        }
-      ],
-      "icon": "icon.ico",
-      "artifactName": "Visualizer-${version}.${ext}"
+      "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Visualizer",
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "installerIcon": "icon.ico",
+      "uninstallerIcon": "icon.ico",
+      "installerHeaderIcon": "icon.ico",
+      "artifactName": "Visualizer-${version}-Setup.${ext}"
     },
     "portable": {
-      "artifactName": "Visualizer-${version}.${ext}",
+      "artifactName": "Visualizer-${version}-Portable.${ext}",
       "requestExecutionLevel": "user",
       "unpackDirName": false
     }
