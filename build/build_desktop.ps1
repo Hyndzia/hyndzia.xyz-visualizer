@@ -150,12 +150,12 @@ $ElectronDist = Join-Path $DesktopRoot 'dist'
 $ArtifactsToCopy = @()
 
 if ($Package -eq 'NSIS' -or $Package -eq 'All') {
-    $BuiltNsis = Get-ChildItem -LiteralPath $ElectronDist -File -Filter 'Visualizer-Setup.exe' |
+    $BuiltNsis = Get-ChildItem -LiteralPath $ElectronDist -File -Filter 'Visualizer-*-Setup.exe' |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
     if (-not $BuiltNsis) {
-        throw 'NSIS build finished, but Visualizer-Setup.exe was not found.'
+        throw 'NSIS build finished, but Visualizer-*-Setup.exe was not found.'
     }
 
     $ArtifactsToCopy += [PSCustomObject]@{
@@ -166,7 +166,7 @@ if ($Package -eq 'NSIS' -or $Package -eq 'All') {
 }
 
 if ($Package -eq 'Portable' -or $Package -eq 'All') {
-    $BuiltPortable = Get-ChildItem -LiteralPath $ElectronDist -File -Filter 'Visualizer-Portable.exe' |
+    $BuiltPortable = Get-ChildItem -LiteralPath $ElectronDist -File -Filter 'Visualizer-*.exe' |
         Sort-Object LastWriteTime -Descending |
         Select-Object -First 1
 
