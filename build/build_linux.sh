@@ -3,7 +3,7 @@
 #execute from project directory always
 cd "$(dirname "$(readlink -f "$0")")" || exit 1
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_DIR="$(dirname "$(readlink -f "$0")")"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
 CONTAINER_NAME="visualizer"
